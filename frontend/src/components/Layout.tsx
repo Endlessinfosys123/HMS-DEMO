@@ -10,8 +10,11 @@ import {
     TestTube,
     Settings,
     LogOut,
-    Bell
+    Bell,
+    BedDouble,
+    UserPlus
 } from 'lucide-react';
+import { useStore } from '../store';
 
 const Sidebar = () => {
     // TODO: Get from auth context
@@ -28,11 +31,17 @@ const Sidebar = () => {
                 <NavLink to="/patients" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                     <Users className="nav-icon" /> Patients
                 </NavLink>
+                <NavLink to="/inpatients" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                    <UserPlus className="nav-icon" /> Admissions
+                </NavLink>
                 <NavLink to="/appointments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                     <Calendar className="nav-icon" /> Appointments
                 </NavLink>
                 <NavLink to="/consultations" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                     <FileText className="nav-icon" /> Consultations
+                </NavLink>
+                <NavLink to="/beds" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                    <BedDouble className="nav-icon" /> Wards
                 </NavLink>
                 <NavLink to="/pharmacy" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                     <Pill className="nav-icon" /> Pharmacy
@@ -82,6 +91,33 @@ const Header = () => {
 };
 
 export const Layout = () => {
+    const Toaster = () => {
+        const notifications = useStore((state) => state.notifications);
+        const removeNotification = useStore((state) => state.removeNotification);
+
+        if (notifications.length === 0) return null;
+
+        return (
+            <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {notifications.map((n) => (
+                    <div
+                        key={n.id}
+                        onClick={() => removeNotification(n.id)}
+                        className={`glass-card animate-fade-in`}
+                        style={{
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            borderLeft: `4px solid var(--status-${n.type === 'error' ? 'danger' : n.type})`,
+                            background: 'var(--bg-panel)'
+                        }}
+                    >
+                        {n.message}
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
     return (
         <div className="app-container">
             <Sidebar />
@@ -91,6 +127,7 @@ export const Layout = () => {
                     <Outlet />
                 </main>
             </div>
+            <Toaster />
         </div>
     );
 };
