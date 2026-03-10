@@ -1,102 +1,119 @@
-import { CreditCard, Printer, DollarSign } from 'lucide-react';
-
-const MOCK_INVOICES = [
-    { id: 'INV-1021', patient: 'John Doe', date: '2026-03-10', amount: '$150.00', status: 'PAID' },
-    { id: 'INV-1022', patient: 'Jane Smith', date: '2026-03-10', amount: '$420.00', status: 'UNPAID' },
-    { id: 'INV-1023', patient: 'Robert Johnson', date: '2026-03-09', amount: '$85.00', status: 'PAID' },
-    { id: 'INV-1024', patient: 'Emily Davis', date: '2026-03-08', amount: '$1,200.00', status: 'PARTIAL' },
-];
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { CreditCard, Download, FileText, Search } from 'lucide-react';
 
 export const Billing = () => {
+    const [invoices, setInvoices] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, []);
+
+    const fetchInvoices = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('invoices')
+            .select('*, patients(first_name, last_name)')
+            .order('created_at', { ascending: false });
+
+        if (!error) setInvoices(data || []);
+        setLoading(false);
+    };
+
+    const totalRevenue = invoices.reduce((acc, inv) => acc + (inv.status === 'PAID' ? Number(inv.amount) : 0), 0);
+    const outstanding = invoices.reduce((acc, inv) => acc + (inv.status !== 'PAID' ? Number(inv.amount) : 0), 0);
+
     return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
+        <div className="animate-fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                    <h1 className="text-3xl font-bold">Billing & Invoicing</h1>
-                    <p className="text-muted">Manage patient invoices, payments, and financial records.</p>
+                    <h1 className="text-3xl">Billing & Financials</h1>
+                    <p className="text-muted">Track invoices, payments, and insurance claims.</p>
                 </div>
-                <button className="btn btn-primary">
-                    <DollarSign size={18} /> Generate Invoice
-                </button>
+                <button className="btn btn-primary"><CreditCard size={18} /> Generic Invoice</button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 1fr)', gap: '24px' }}>
-
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
                 <div className="glass-card">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold">Recent Invoices</h3>
-                        <div className="flex gap-2">
-                            <button className="btn btn-outline text-sm">All</button>
-                            <button className="btn btn-outline text-sm">Unpaid</button>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '10px 16px', width: '300px' }}>
+                            <Search size={18} className="text-muted" style={{ marginRight: '8px' }} />
+                            <input
+                                type="text"
+                                placeholder="Search invoices..."
+                                style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
+                            />
                         </div>
                     </div>
 
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
-                            <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-secondary)' }}>
-                                <th style={{ padding: '12px' }}>Invoice No</th>
-                                <th style={{ padding: '12px' }}>Patient</th>
-                                <th style={{ padding: '12px' }}>Date</th>
-                                <th style={{ padding: '12px' }}>Amount</th>
-                                <th style={{ padding: '12px' }}>Status</th>
-                                <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
+                            <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                <th style={{ padding: '12px 16px' }}>INVOICE ID</th>
+                                <th style={{ padding: '12px 16px' }}>PATIENT</th>
+                                <th style={{ padding: '12px 16px' }}>AMOUNT</th>
+                                <th style={{ padding: '12px 16px' }}>STATUS</th>
+                                <th style={{ padding: '12px 16px' }}>DATE</th>
+                                <th style={{ padding: '12px 16px' }}></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {MOCK_INVOICES.map((inv) => (
-                                <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} className="hover:bg-white/5">
-                                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{inv.id}</td>
-                                    <td style={{ padding: '12px' }}>{inv.patient}</td>
-                                    <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{inv.date}</td>
-                                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{inv.amount}</td>
-                                    <td style={{ padding: '12px' }}>
-                                        <span style={{
-                                            padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold',
-                                            background: inv.status === 'PAID' ? 'var(--status-success-bg)' : inv.status === 'UNPAID' ? 'var(--status-danger-bg)' : 'var(--status-warning-bg)',
-                                            color: inv.status === 'PAID' ? 'var(--status-success)' : inv.status === 'UNPAID' ? 'var(--status-danger)' : 'var(--status-warning)'
-                                        }}>
+                            {loading ? (
+                                <tr><td colSpan={6} style={{ padding: '32px', textAlign: 'center' }}>Loading financials...</td></tr>
+                            ) : invoices.length > 0 ? invoices.map((inv) => (
+                                <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <td style={{ padding: '16px', fontWeight: 'bold' }}>#{inv.id.slice(0, 6).toUpperCase()}</td>
+                                    <td style={{ padding: '16px' }}>{inv.patients?.first_name} {inv.patients?.last_name}</td>
+                                    <td style={{ padding: '16px' }}>${Number(inv.amount).toFixed(2)}</td>
+                                    <td style={{ padding: '16px' }}>
+                                        <span
+                                            style={{
+                                                padding: '4px 8px',
+                                                borderRadius: '6px',
+                                                fontSize: '0.7rem',
+                                                fontWeight: 'bold',
+                                                background: inv.status === 'PAID' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                                color: inv.status === 'PAID' ? 'var(--status-success)' : 'var(--status-warning)'
+                                            }}
+                                        >
                                             {inv.status}
                                         </span>
                                     </td>
-                                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                                        <div className="flex justify-end gap-2">
-                                            {inv.status !== 'PAID' && (
-                                                <button className="btn btn-primary text-sm py-1 px-2" title="Accept Payment">
-                                                    Pay
-                                                </button>
-                                            )}
-                                            <button className="btn btn-outline text-sm py-1 px-2" title="Print Invoice">
-                                                <Printer size={14} />
-                                            </button>
-                                        </div>
+                                    <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{new Date(inv.created_at).toLocaleDateString()}</td>
+                                    <td style={{ padding: '16px', textAlign: 'right' }}>
+                                        <button className="btn btn-outline" style={{ padding: '6px' }}><Download size={14} /></button>
                                     </td>
                                 </tr>
-                            ))}
+                            )) : (
+                                <tr><td colSpan={6} style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)' }}>No invoices generated yet.</td></tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
-                <div className="glass-card">
-                    <h3 className="font-bold mb-4">Payment Methods</h3>
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-[var(--border-light)]">
-                            <CreditCard className="text-accent-primary" />
-                            <div>
-                                <div className="font-bold">Stripe POS</div>
-                                <div className="text-xs text-muted">Connected</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div className="glass-card">
+                        <h4 className="mb-4">Quick Summary</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span className="text-secondary">Paid Revenue</span>
+                                <span className="font-bold">${totalRevenue.toFixed(2)}</span>
                             </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-[var(--border-light)]">
-                            <DollarSign className="text-success" />
-                            <div>
-                                <div className="font-bold">Cash Drawer</div>
-                                <div className="text-xs text-muted">Register 1 • Open</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span className="text-secondary">Outstanding</span>
+                                <span className="font-bold text-accent">${outstanding.toFixed(2)}</span>
                             </div>
+                            <button className="btn btn-outline" style={{ width: '100%', marginTop: '8px' }}>View Report</button>
                         </div>
                     </div>
-                </div>
 
+                    <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.05)' }}>
+                        <h4 className="mb-2 flex items-center gap-2"><FileText size={18} /> Insurance Tracking</h4>
+                        <p className="text-xs text-muted mb-4">4 Claims pending approval from Medicare.</p>
+                        <button className="btn btn-primary" style={{ width: '100%', fontSize: '0.8rem' }}>Process Claims</button>
+                    </div>
+                </div>
             </div>
         </div>
     );

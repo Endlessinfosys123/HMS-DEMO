@@ -1,4 +1,4 @@
-
+import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -7,127 +7,137 @@ import {
     FileText,
     Pill,
     CreditCard,
-    TestTube,
     Settings,
     LogOut,
     Bell,
-    BedDouble,
-    UserPlus
+    Search,
+    TestTube
 } from 'lucide-react';
-import { useStore } from '../store';
+import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = () => {
-    // TODO: Get from auth context
-
     return (
         <aside className="sidebar">
-            <div className="sidebar-header">
-                HealthCore HMS
+            <div style={{ padding: '0 24px', marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '1.2rem', color: 'var(--accent-primary)' }}>HealthCore HMS</h2>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Supabase Edition</p>
             </div>
-            <nav className="sidebar-nav">
-                <NavLink to="/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <LayoutDashboard className="nav-icon" /> Dashboard
-                </NavLink>
-                <NavLink to="/patients" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <Users className="nav-icon" /> Patients
-                </NavLink>
-                <NavLink to="/inpatients" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <UserPlus className="nav-icon" /> Admissions
-                </NavLink>
-                <NavLink to="/appointments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <Calendar className="nav-icon" /> Appointments
-                </NavLink>
-                <NavLink to="/consultations" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <FileText className="nav-icon" /> Consultations
-                </NavLink>
-                <NavLink to="/beds" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <BedDouble className="nav-icon" /> Wards
-                </NavLink>
-                <NavLink to="/pharmacy" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <Pill className="nav-icon" /> Pharmacy
-                </NavLink>
-                <NavLink to="/lab" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <TestTube className="nav-icon" /> Laboratory
-                </NavLink>
-                <NavLink to="/billing" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <CreditCard className="nav-icon" /> Billing
-                </NavLink>
-                <div style={{ flex: 1 }} />
-                <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <Settings className="nav-icon" /> Settings
-                </NavLink>
+
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <SidebarLink to="/dashboard" icon={<LayoutDashboard size={20} />} label="Dashboard" />
+                <SidebarLink to="/patients" icon={<Users size={20} />} label="Patients" />
+                <SidebarLink to="/appointments" icon={<Calendar size={20} />} label="Schedule" />
+                <SidebarLink to="/inpatients" icon={<Users size={20} />} label="Admissions" />
+                <SidebarLink to="/beds" icon={<FileText size={20} />} label="Wards" />
+                <SidebarLink to="/lab" icon={<TestTube size={20} />} label="Laboratory" />
+                <SidebarLink to="/pharmacy" icon={<Pill size={20} />} label="Pharmacy" />
+                <SidebarLink to="/billing" icon={<CreditCard size={20} />} label="Billing" />
+
+                <div style={{ height: '32px' }} />
+                <SidebarLink to="/settings" icon={<Settings size={20} />} label="Settings" />
             </nav>
         </aside>
     );
 };
 
+const SidebarLink = ({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) => (
+    <NavLink
+        to={to}
+        style={({ isActive }) => ({
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 24px',
+            color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
+            textDecoration: 'none',
+            fontWeight: isActive ? '600' : '400',
+            background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+            borderLeft: isActive ? '3px solid var(--accent-primary)' : '3px solid transparent'
+        })}
+    >
+        {icon} <span>{label}</span>
+    </NavLink>
+);
+
 const Header = () => {
+    const { profile, signOut } = useAuth();
+    const [showNotifications, setShowNotifications] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        // TODO: implement logout
+    const handleLogout = async () => {
+        await signOut();
         navigate('/login');
     };
 
     return (
         <header className="top-header">
-            <div className="header-search">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" placeholder="Search patients, invoices, etc..." />
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '8px 16px', width: '400px' }}>
+                <Search size={18} className="text-muted" style={{ marginRight: '8px' }} />
+                <input
+                    type="text"
+                    placeholder="Search patients, records..."
+                    style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
+                />
             </div>
-            <div className="header-profile">
-                <button className="btn btn-outline" style={{ padding: '8px', border: 'none' }}>
-                    <Bell size={20} />
-                </button>
-                <div className="profile-avatar" title="Admin User">
-                    A
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{ position: 'relative' }}>
+                    <button
+                        onClick={() => setShowNotifications(!showNotifications)}
+                        className="btn btn-outline"
+                        style={{ padding: '8px', border: 'none', position: 'relative' }}
+                    >
+                        <Bell size={20} />
+                        <span style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', background: 'var(--status-danger)', borderRadius: '50%' }}></span>
+                    </button>
+
+                    {showNotifications && (
+                        <div className="glass-card" style={{ position: 'absolute', top: '50px', right: '0', width: '320px', zIndex: 1000, padding: '16px' }}>
+                            <h4 className="mb-4">Notifications</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <NotificationItem title="New Appointment" time="5m ago" desc="Patient John Doe scheduled an appointment." />
+                                <NotificationItem title="Low Stock Alert" time="2h ago" desc="Paracetamol 500mg is running low (8 items left)." />
+                                <NotificationItem title="Lab Result Ready" time="1d ago" desc="Lab results for Patient Sarah Jenkins are available." />
+                            </div>
+                        </div>
+                    )}
                 </div>
-                <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '8px 12px', fontSize: '0.8rem' }}>
-                    <LogOut size={16} /> Logout
+
+                <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>{profile?.first_name || 'Admin User'}</p>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{profile?.roles?.name || 'Administrator'}</p>
+                </div>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(45deg, var(--accent-primary), var(--accent-secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                    {profile?.first_name?.[0] || 'A'}
+                </div>
+                <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '8px 12px' }}>
+                    <LogOut size={16} />
                 </button>
             </div>
         </header>
     );
 };
 
+const NotificationItem = ({ title, time, desc }: { title: string, time: string, desc: string }) => (
+    <div style={{ paddingBottom: '12px', borderBottom: '1px solid var(--border-light)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>{title}</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{time}</span>
+        </div>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{desc}</p>
+    </div>
+);
+
 export const Layout = () => {
-    const Toaster = () => {
-        const notifications = useStore((state) => state.notifications);
-        const removeNotification = useStore((state) => state.removeNotification);
-
-        if (notifications.length === 0) return null;
-
-        return (
-            <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {notifications.map((n) => (
-                    <div
-                        key={n.id}
-                        onClick={() => removeNotification(n.id)}
-                        className={`glass-card animate-fade-in`}
-                        style={{
-                            padding: '12px 16px',
-                            cursor: 'pointer',
-                            borderLeft: `4px solid var(--status-${n.type === 'error' ? 'danger' : n.type})`,
-                            background: 'var(--bg-panel)'
-                        }}
-                    >
-                        {n.message}
-                    </div>
-                ))}
-            </div>
-        );
-    };
-
     return (
         <div className="app-container">
             <Sidebar />
             <div className="main-wrapper">
                 <Header />
-                <main className="content-area animate-fade-in">
+                <main className="content-area">
                     <Outlet />
                 </main>
             </div>
-            <Toaster />
         </div>
     );
 };

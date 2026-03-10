@@ -1,59 +1,60 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom';
-
-export interface User {
-    id: string;
-    email: string;
-    role: string;
-}
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
+import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
     user: User | null;
-    token: string | null;
-    isAuthenticated: boolean;
-    login: (token: string) => void;
-    logout: () => void;
+    session: Session | null;
+    profile: any | null;
+    isLoading: boolean;
+    signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-    const navigate = useNavigate();
+    const [session, setSession] = useState<Session | null>(null);
+    const [profile, setProfile] = useState<any | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (token) {
-            try {
-                const decoded = jwtDecode<User>(token);
-                setUser(decoded);
-                localStorage.setItem('token', token);
-            } catch (error) {
-                console.error('Invalid token', error);
-                setToken(null);
-                setUser(null);
-                localStorage.removeItem('token');
-            }
-        } else {
-            setUser(null);
-            localStorage.removeItem('token');
-        }
-    }, [token]);
+        // Check active sessions and sets the user
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setUser(session?.user ?? null);
+            if (session?.user) fetchProfile(session.user.id);
+            setIsLoading(false);
+        });
 
-    const login = (newToken: string) => {
-        setToken(newToken);
+        // Listen for changes on auth state (sign in, sign out, etc.)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+            setUser(session?.user ?? null);
+            if (session?.user) fetchProfile(session.user.id);
+            else setProfile(null);
+            setIsLoading(false);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const fetchProfile = async (userId: string) => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*, roles(name)')
+            .eq('id', userId)
+            .single();
+
+        if (!error) setProfile(data);
     };
 
-    const logout = () => {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem('token');
-        navigate('/login');
+    const signOut = async () => {
+        await supabase.auth.signOut();
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, login, logout }}>
+        <AuthContext.Provider value={{ user, session, profile, isLoading, signOut }}>
             {children}
         </AuthContext.Provider>
     );

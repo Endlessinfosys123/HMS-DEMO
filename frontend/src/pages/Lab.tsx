@@ -1,83 +1,89 @@
-import { TestTube, FileText, CheckCircle, Clock } from 'lucide-react';
-
-const MOCK_LAB_ORDERS = [
-    { id: '1', patient: 'John Doe', test: 'Complete Blood Count (CBC)', doctor: 'Dr. Sarah Smith', status: 'PENDING', date: '2026-03-10' },
-    { id: '2', patient: 'Jane Smith', test: 'Lipid Profile', doctor: 'Dr. Emily Chen', status: 'IN_PROGRESS', date: '2026-03-10' },
-    { id: '3', patient: 'Robert Johnson', test: 'HbA1c', doctor: 'Dr. James Wilson', status: 'COMPLETED', date: '2026-03-09' },
-    { id: '4', patient: 'Emily Davis', test: 'Thyroid Function', doctor: 'Dr. Sarah Smith', status: 'COMPLETED', date: '2026-03-08' },
-];
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { TestTube, Plus, Search, CheckCircle, Clock } from 'lucide-react';
 
 export const Lab = () => {
+    const [orders, setOrders] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    const fetchOrders = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('lab_orders')
+            .select('*, patients(first_name, last_name), lab_tests(name)')
+            .order('created_at', { ascending: false });
+
+        if (!error) setOrders(data || []);
+        setLoading(false);
+    };
+
     return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
+        <div className="animate-fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                    <h1 className="text-3xl font-bold">Laboratory System</h1>
-                    <p className="text-muted">Manage lab tests, specimens, and patient reports.</p>
+                    <h1 className="text-3xl">Laboratory System</h1>
+                    <p className="text-muted">Track diagnostic tests and results.</p>
                 </div>
-                <button className="btn btn-primary">
-                    <TestTube size={18} /> New Test Order
-                </button>
+                <button className="btn btn-primary"><Plus size={18} /> New Lab Order</button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 1fr)', gap: '24px' }}>
+            <div className="glass-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '10px 16px', width: '350px' }}>
+                        <Search size={18} className="text-muted" style={{ marginRight: '8px' }} />
+                        <input
+                            type="text"
+                            placeholder="Search by Patient or Test..."
+                            style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
+                        />
+                    </div>
+                </div>
 
-                <div className="glass-card">
-                    <h3 className="font-bold mb-4">Recent Lab Orders</h3>
+                {loading ? (
+                    <div style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)' }}>Syncing Lab Orders...</div>
+                ) : (
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
-                            <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-secondary)' }}>
-                                <th style={{ padding: '12px' }}>Order ID</th>
-                                <th style={{ padding: '12px' }}>Patient</th>
-                                <th style={{ padding: '12px' }}>Test Name</th>
-                                <th style={{ padding: '12px' }}>Ref Doctor</th>
-                                <th style={{ padding: '12px' }}>Status</th>
-                                <th style={{ padding: '12px', textAlign: 'right' }}>Action</th>
+                            <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                <th style={{ padding: '12px 16px' }}>ORDER ID</th>
+                                <th style={{ padding: '12px 16px' }}>PATIENT</th>
+                                <th style={{ padding: '12px 16px' }}>TEST NAME</th>
+                                <th style={{ padding: '12px 16px' }}>STATUS</th>
+                                <th style={{ padding: '12px 16px' }}>DATE</th>
+                                <th style={{ padding: '12px 16px' }}></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {MOCK_LAB_ORDERS.map((order) => (
-                                <tr key={order.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} className="hover:bg-white/5 cursor-pointer">
-                                    <td style={{ padding: '12px', color: 'var(--text-muted)' }}>#{order.id.padStart(4, '0')}</td>
-                                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{order.patient}</td>
-                                    <td style={{ padding: '12px' }}>{order.test}</td>
-                                    <td style={{ padding: '12px' }}>{order.doctor}</td>
-                                    <td style={{ padding: '12px' }}>
-                                        <span style={{
-                                            padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold',
-                                            background: order.status === 'COMPLETED' ? 'var(--status-success-bg)' : order.status === 'IN_PROGRESS' ? 'var(--status-warning-bg)' : 'var(--status-info-bg)',
-                                            color: order.status === 'COMPLETED' ? 'var(--status-success)' : order.status === 'IN_PROGRESS' ? 'var(--status-warning)' : 'var(--status-info)'
-                                        }}>
-                                            {order.status.replace('_', ' ')}
-                                        </span>
+                            {orders.length > 0 ? orders.map((order) => (
+                                <tr key={order.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <td style={{ padding: '16px', fontWeight: '600' }}>#{order.id.slice(0, 8).toUpperCase()}</td>
+                                    <td style={{ padding: '16px' }}>{order.patients?.first_name} {order.patients?.last_name}</td>
+                                    <td style={{ padding: '16px' }}>{order.lab_tests?.name}</td>
+                                    <td style={{ padding: '16px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: order.status === 'COMPLETED' ? 'var(--status-success)' : 'var(--status-warning)' }}>
+                                            {order.status === 'COMPLETED' ? <CheckCircle size={14} /> : <Clock size={14} />}
+                                            <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{order.status}</span>
+                                        </div>
                                     </td>
-                                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                                        {order.status === 'COMPLETED' ? (
-                                            <button className="btn btn-outline text-sm py-1 px-3"><FileText size={14} /> View</button>
-                                        ) : (
-                                            <button className="btn btn-primary text-sm py-1 px-3"><TestTube size={14} /> Update</button>
-                                        )}
+                                    <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{new Date(order.created_at).toLocaleDateString()}</td>
+                                    <td style={{ padding: '16px', textAlign: 'right' }}>
+                                        <button className="btn btn-outline" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>View Results</button>
                                     </td>
                                 </tr>
-                            ))}
+                            )) : (
+                                <tr>
+                                    <td colSpan={6} style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        No lab orders found.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                    <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0,0,0,0.4))' }}>
-                        <h3 className="font-bold flex items-center gap-2 mb-2"><CheckCircle size={18} className="text-success" /> Completed Today</h3>
-                        <h1 className="text-4xl font-bold">24</h1>
-                        <p className="text-sm text-muted mt-2">Reports ready for dispatch</p>
-                    </div>
-
-                    <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(0,0,0,0.4))' }}>
-                        <h3 className="font-bold flex items-center gap-2 mb-2"><Clock size={18} className="text-warning" /> Pending Samples</h3>
-                        <h1 className="text-4xl font-bold">8</h1>
-                        <p className="text-sm text-muted mt-2">Awaiting analysis completion</p>
-                    </div>
-                </div>
-
+                )}
             </div>
         </div>
     );

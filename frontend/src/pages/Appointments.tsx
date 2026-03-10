@@ -1,111 +1,74 @@
-import { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, User, FileText, CheckCircle, XCircle } from 'lucide-react';
-
-const MOCK_APPOINTMENTS = [
-    { id: '1', patientName: 'John Doe', time: '09:00 AM', type: 'General Checkup', status: 'COMPLETED' },
-    { id: '2', patientName: 'Jane Smith', time: '10:30 AM', type: 'Follow-up', status: 'IN_PROGRESS' },
-    { id: '3', patientName: 'Robert Johnson', time: '11:45 AM', type: 'Cardiology Review', status: 'SCHEDULED' },
-    { id: '4', patientName: 'Emily Davis', time: '02:00 PM', type: 'Lab Results', status: 'SCHEDULED' },
-    { id: '5', patientName: 'Michael Wilson', time: '04:15 PM', type: 'Vaccination', status: 'CANCELLED' },
-];
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { Calendar as CalendarIcon, Clock, User, Plus, Check } from 'lucide-react';
 
 export const Appointments = () => {
-    const [selectedDate, setSelectedDate] = useState('2026-03-10');
+    const [appointments, setAppointments] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchAppointments();
+    }, []);
+
+    const fetchAppointments = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('appointments')
+            .select('*, patients(first_name, last_name)')
+            .order('appointment_date', { ascending: true });
+
+        if (!error) setAppointments(data || []);
+        setLoading(false);
+    };
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
+        <div className="animate-fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                    <h1 className="text-3xl font-bold">Appointments Schedule</h1>
-                    <p className="text-muted">Manage doctor schedules and patient bookings.</p>
+                    <h1 className="text-3xl">Appointment Schedule</h1>
+                    <p className="text-muted">Manage doctor availability and patient visits.</p>
                 </div>
-                <button className="btn btn-primary">
-                    <CalendarIcon size={18} /> Book Appointment
-                </button>
+                <button className="btn btn-primary"><Plus size={18} /> New Appointment</button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
-
-                {/* Calendar Side */}
-                <div className="glass-card mt-2">
-                    <h3 className="font-bold mb-4">Select Date</h3>
-                    <input
-                        type="date"
-                        className="form-input mb-6"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                    />
-
-                    <h3 className="font-bold mb-4">Doctors on Duty</h3>
-                    <div className="flex flex-col gap-3">
-                        {[
-                            { name: 'Dr. Sarah Smith', spec: 'Cardiologist', status: 'Available' },
-                            { name: 'Dr. James Wilson', spec: 'Pediatrician', status: 'In Surgery' },
-                            { name: 'Dr. Emily Chen', spec: 'General Physician', status: 'Available' }
-                        ].map((doc, idx) => (
-                            <div key={idx} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-light)' }}>
-                                <div className="font-bold">{doc.name}</div>
-                                <div className="text-sm text-muted mb-2">{doc.spec}</div>
-                                <div style={{ fontSize: '0.8rem', color: doc.status === 'Available' ? 'var(--status-success)' : 'var(--status-warning)' }}>
-                                    • {doc.status}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+                {loading ? (
+                    <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center' }}>Loading schedule...</div>
+                ) : appointments.length > 0 ? appointments.map((apt) => (
+                    <div key={apt.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <User size={20} />
+                                </div>
+                                <div>
+                                    <h4 style={{ margin: 0 }}>{apt.patients?.first_name} {apt.patients?.last_name}</h4>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {apt.id.slice(0, 8).toUpperCase()}</p>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
+                            <span style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--status-success)', fontSize: '0.7rem', fontWeight: 'bold' }}>{apt.status}</span>
+                        </div>
 
-                {/* Schedule Side */}
-                <div className="glass-card mt-2">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-xl">Schedule for {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h3>
-                        <div className="flex gap-2">
-                            <span className="badge badge-success">COMPLETED</span>
-                            <span className="badge badge-warning">IN PROGRESS</span>
-                            <span className="badge badge-info">SCHEDULED</span>
+                        <div style={{ display: 'flex', gap: '20px', borderTop: '1px solid var(--border-light)', paddingTop: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                <CalendarIcon size={14} /> {new Date(apt.appointment_date).toLocaleDateString()}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                <Clock size={14} /> {new Date(apt.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                            <button className="btn btn-outline" style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}>Reschedule</button>
+                            <button className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem', padding: '8px' }}><Check size={14} /> Complete</button>
                         </div>
                     </div>
-
-                    <div className="flex flex-col gap-4">
-                        {MOCK_APPOINTMENTS.map((apt) => (
-                            <div key={apt.id} style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                padding: '16px',
-                                borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.05)',
-                                borderLeft: `4px solid ${apt.status === 'COMPLETED' ? 'var(--status-success)' :
-                                        apt.status === 'IN_PROGRESS' ? 'var(--status-warning)' :
-                                            apt.status === 'CANCELLED' ? 'var(--status-danger)' :
-                                                'var(--status-info)'
-                                    }`
-                            }}
-                                className="hover:bg-white/10 transition-colors"
-                            >
-                                <div className="flex gap-6 items-center">
-                                    <div className="flex flex-col items-center justify-center p-3 rounded bg-black/20" style={{ width: '80px' }}>
-                                        <Clock size={18} className="text-muted mb-1" />
-                                        <span className="font-bold text-sm">{apt.time}</span>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-lg flex items-center gap-2"><User size={16} /> {apt.patientName}</h4>
-                                        <p className="text-muted text-sm flex items-center gap-2 mt-1"><FileText size={14} /> {apt.type}</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button className="btn btn-outline" style={{ padding: '8px' }} title="Start Consultation">
-                                        <CheckCircle size={18} className="text-success" />
-                                    </button>
-                                    <button className="btn btn-outline" style={{ padding: '8px' }} title="Cancel">
-                                        <XCircle size={18} className="text-danger" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                )) : (
+                    <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '64px', color: 'var(--text-muted)' }}>
+                        <CalendarIcon size={48} style={{ marginBottom: '16px', opacity: 0.3 }} />
+                        <p>No appointments scheduled for today.</p>
                     </div>
-
-                </div>
-
+                )}
             </div>
         </div>
     );

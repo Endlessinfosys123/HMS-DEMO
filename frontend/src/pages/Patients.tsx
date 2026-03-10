@@ -1,96 +1,90 @@
-import { useState } from 'react';
-import { Search, Plus, MoreVertical, Edit, Trash2 } from 'lucide-react';
-
-const MOCK_PATIENTS = [
-    { id: '1', name: 'John Doe', age: 45, gender: 'Male', blood: 'O+', lastVisit: '2026-03-08' },
-    { id: '2', name: 'Jane Smith', age: 32, gender: 'Female', blood: 'A-', lastVisit: '2026-03-10' },
-    { id: '3', name: 'Robert Johnson', age: 58, gender: 'Male', blood: 'B+', lastVisit: '2026-02-28' },
-    { id: '4', name: 'Emily Davis', age: 24, gender: 'Female', blood: 'AB+', lastVisit: '2026-03-05' },
-    { id: '5', name: 'Michael Wilson', age: 67, gender: 'Male', blood: 'O-', lastVisit: '2026-01-15' },
-];
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { Search, Plus, MoreVertical, ExternalLink } from 'lucide-react';
 
 export const Patients = () => {
-    const [searchTerm, setSearchTerm] = useState('');
+    const [patients, setPatients] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchPatients();
+    }, []);
+
+    const fetchPatients = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('patients')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (!error) setPatients(data || []);
+        setLoading(false);
+    };
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
+        <div className="animate-fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                    <h1 className="text-3xl font-bold">Patient Management</h1>
-                    <p className="text-muted">View, search, and manage hospital patients.</p>
+                    <h1 className="text-3xl">Patient Directory</h1>
+                    <p className="text-muted">Manage health records and admission history.</p>
                 </div>
-                <button className="btn btn-primary">
-                    <Plus size={18} /> Register Patient
-                </button>
+                <button className="btn btn-primary"><Plus size={18} /> Register Patient</button>
             </div>
 
-            <div className="glass-card mb-6">
-                <div className="flex justify-between items-center mb-6">
-                    <div className="header-search" style={{ border: '1px solid var(--border-light)', width: '350px' }}>
-                        <Search size={18} className="text-muted" />
+            <div className="glass-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '10px 16px', width: '350px' }}>
+                        <Search size={18} className="text-muted" style={{ marginRight: '8px' }} />
                         <input
                             type="text"
-                            placeholder="Search by name, ID, or phone number..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ marginLeft: '8px' }}
+                            placeholder="Search by ID, Name or Phone..."
+                            style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
                         />
                     </div>
-                    <div className="flex gap-4">
-                        <button className="btn btn-outline text-sm">Filter</button>
-                        <button className="btn btn-outline text-sm">Export CSV</button>
-                    </div>
+                    <button className="btn btn-outline" style={{ fontSize: '0.85rem' }}>Filter</button>
                 </div>
 
-                <div style={{ overflowX: 'auto' }}>
+                {loading ? (
+                    <div style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading records...</div>
+                ) : (
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
-                            <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-secondary)' }}>
-                                <th style={{ padding: '16px' }}>ID</th>
-                                <th style={{ padding: '16px' }}>Patient Name</th>
-                                <th style={{ padding: '16px' }}>Age/Gender</th>
-                                <th style={{ padding: '16px' }}>Blood Group</th>
-                                <th style={{ padding: '16px' }}>Last Visit</th>
-                                <th style={{ padding: '16px', textAlign: 'right' }}>Actions</th>
+                            <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                <th style={{ padding: '12px 16px' }}>NAME</th>
+                                <th style={{ padding: '12px 16px' }}>GENDER / AGE</th>
+                                <th style={{ padding: '12px 16px' }}>PHONE</th>
+                                <th style={{ padding: '12px 16px' }}>STATUS</th>
+                                <th style={{ padding: '12px 16px' }}>ADMISSION</th>
+                                <th style={{ padding: '12px 16px' }}></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {MOCK_PATIENTS.map((p, i) => (
-                                <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} className="hover:bg-white/5 transition-colors cursor-pointer">
-                                    <td style={{ padding: '16px', fontWeight: '500', color: 'var(--text-muted)' }}>#{p.id.padStart(4, '0')}</td>
-                                    <td style={{ padding: '16px', fontWeight: 'bold' }}>{p.name}</td>
-                                    <td style={{ padding: '16px' }}>{p.age} / {p.gender}</td>
+                            {patients.length > 0 ? patients.map((p) => (
+                                <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }} className="patient-row">
                                     <td style={{ padding: '16px' }}>
-                                        <span style={{
-                                            background: 'rgba(239, 68, 68, 0.2)',
-                                            color: '#ef4444',
-                                            padding: '4px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '0.8rem',
-                                            fontWeight: 'bold'
-                                        }}>
-                                            {p.blood}
-                                        </span>
+                                        <div style={{ fontWeight: '600' }}>{p.first_name} {p.last_name}</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>#{p.id.slice(0, 8).toUpperCase()}</div>
                                     </td>
-                                    <td style={{ padding: '16px', color: 'var(--text-secondary)' }}>{p.lastVisit}</td>
+                                    <td style={{ padding: '16px' }}>{p.gender || 'N/A'}</td>
+                                    <td style={{ padding: '16px' }}>{p.phone}</td>
+                                    <td style={{ padding: '16px' }}>
+                                        <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--status-success)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold' }}>Active</span>
+                                    </td>
+                                    <td style={{ padding: '16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</td>
                                     <td style={{ padding: '16px', textAlign: 'right' }}>
-                                        <div className="flex justify-end gap-2">
-                                            <button className="btn btn-outline" style={{ padding: '6px' }} title="Edit">
-                                                <Edit size={16} />
-                                            </button>
-                                            <button className="btn btn-outline" style={{ padding: '6px' }} title="Delete">
-                                                <Trash2 size={16} className="text-red-500" />
-                                            </button>
-                                            <button className="btn btn-outline" style={{ padding: '6px' }}>
-                                                <MoreVertical size={16} />
-                                            </button>
-                                        </div>
+                                        <button className="btn btn-outline" style={{ padding: '6px' }}><ExternalLink size={14} /></button>
                                     </td>
                                 </tr>
-                            ))}
+                            )) : (
+                                <tr>
+                                    <td colSpan={6} style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        No patients found. Get started by registering one!
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
-                </div>
+                )}
             </div>
         </div>
     );
