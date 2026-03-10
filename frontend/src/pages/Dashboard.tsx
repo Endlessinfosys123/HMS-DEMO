@@ -51,7 +51,7 @@ export const Dashboard = () => {
 
 const StatCard = ({ icon, label, value, color }: { icon: React.ReactNode, label: string, value: number, color: string }) => (
     <div className="glass-card" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-        <div style={{ padding: '16px', background: `rgba(${color}, 0.1)`, borderRadius: '14px', color: color }}>
+        <div style={{ padding: '16px', backgroundColor: `${color}1A`, borderRadius: '14px', color: color }}>
             {icon}
         </div>
         <div>
