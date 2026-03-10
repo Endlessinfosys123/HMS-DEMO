@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { TestTube, Plus, Search, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Search, CheckCircle, Clock } from 'lucide-react';
 
 export const Lab = () => {
     const [orders, setOrders] = useState<any[]>([]);

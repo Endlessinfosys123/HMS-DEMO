@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Search, Plus, MoreVertical, ExternalLink } from 'lucide-react';
+import { Search, Plus, ExternalLink } from 'lucide-react';
 
 export const Patients = () => {
     const [patients, setPatients] = useState<any[]>([]);
