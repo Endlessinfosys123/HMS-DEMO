@@ -1,4 +1,4 @@
-import React from 'react';
+
 import {
     Users, Calendar, CreditCard, Activity, TrendingUp
 } from 'lucide-react';
