@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import { 
     Users, 
     Calendar, 
     CreditCard, 
     Activity, 
-    TrendingUp
+    TrendingUp,
+    Stethoscope,
+    ChevronRight
 } from 'lucide-react';
 
 export const Dashboard = () => {
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         patients: 0,
         appointments: 0,
@@ -16,6 +18,7 @@ export const Dashboard = () => {
         occupancy: 0
     });
     const [recentAdmissions, setRecentAdmissions] = useState<any[]>([]);
+    const [topDoctors, setTopDoctors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -48,8 +51,15 @@ export const Dashboard = () => {
             .select('*')
             .order('created_at', { ascending: false })
             .limit(5);
+
+        const { data: doctors } = await supabase
+            .from('profiles')
+            .select('*, roles!inner(name)')
+            .eq('roles.name', 'DOCTOR')
+            .limit(3);
         
         setRecentAdmissions(admissions || []);
+        setTopDoctors(doctors || []);
         setLoading(false);
     };
 
@@ -141,6 +151,32 @@ export const Dashboard = () => {
                             <HealthItem label="Database" status="Optimal" />
                             <HealthItem label="Storage" status="92% Free" />
                             <HealthItem label="API Latency" status="24ms" />
+                        </div>
+                    </div>
+
+                    <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.03)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h4 style={{ margin: 0 }}>Top Medical Professionals</h4>
+                            <button onClick={() => navigate('/doctors')} className="btn btn-outline" style={{ fontSize: '0.7rem', padding: '4px 8px' }}>View All</button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {topDoctors.map(doc => (
+                                <div 
+                                    key={doc.id} 
+                                    onClick={() => navigate(`/doctors/${doc.id}`)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', borderRadius: '8px', cursor: 'pointer', background: 'rgba(255,255,255,0.02)' }}
+                                    className="patient-row"
+                                >
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)' }}>
+                                        <Stethoscope size={16} />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '600' }}>Dr. {doc.first_name} {doc.last_name}</p>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{doc.specialization || 'General'}</p>
+                                    </div>
+                                    <ChevronRight size={14} className="text-muted" />
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

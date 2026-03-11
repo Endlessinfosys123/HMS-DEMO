@@ -13,6 +13,8 @@ import { Lab } from './pages/Lab';
 import { PatientProfile } from './pages/PatientProfile';
 import { Staff } from './pages/Staff';
 import { Reports } from './pages/Reports';
+import { Doctors } from './pages/Doctors';
+import { DoctorProfile } from './pages/DoctorProfile';
 import { Settings } from './pages/Settings';
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="patients" element={<Patients />} />
           <Route path="patients/:id" element={<PatientProfile />} />
+          <Route path="doctors" element={<Doctors />} />
+          <Route path="doctors/:id" element={<DoctorProfile />} />
           <Route path="appointments" element={<Appointments />} />
           <Route path="inpatients" element={<Inpatients />} />
           <Route path="beds" element={<Beds />} />

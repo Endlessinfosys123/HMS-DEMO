@@ -16,7 +16,8 @@ import {
     BarChart3,
     MessageSquare,
     Sparkles,
-    X
+    X,
+    Stethoscope
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -32,6 +33,7 @@ const Sidebar = () => {
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <SidebarLink to="/dashboard" icon={<LayoutDashboard size={20} />} label="Dashboard" />
                 <SidebarLink to="/patients" icon={<Users size={20} />} label="Patients" />
+                <SidebarLink to="/doctors" icon={<Stethoscope size={20} />} label="Doctors" />
                 <SidebarLink to="/appointments" icon={<Calendar size={20} />} label="Schedule" />
                 <SidebarLink to="/inpatients" icon={<Users size={20} />} label="Admissions" />
                 <SidebarLink to="/beds" icon={<FileText size={20} />} label="Wards" />

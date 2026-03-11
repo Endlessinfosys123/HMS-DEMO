@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import { UserPlus, Search, Mail, Phone, Edit2, Trash2 } from 'lucide-react';
 import { Modal } from '../components/Modal';
 
 export const Staff = () => {
+    const navigate = useNavigate();
     const [staff, setStaff] = useState<any[]>([]);
     const [roles, setRoles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -164,7 +166,12 @@ export const Staff = () => {
                             {staff.map((m) => (
                                 <tr key={m.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                     <td style={{ padding: '16px' }}>
-                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                        <div 
+                                            style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer' }}
+                                            onClick={() => {
+                                                if (m.roles?.name === 'DOCTOR') navigate(`/doctors/${m.id}`);
+                                            }}
+                                        >
                                             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
                                                 {m.first_name[0]}{m.last_name[0]}
                                             </div>
