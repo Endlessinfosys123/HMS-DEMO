@@ -141,12 +141,27 @@ ALTER TABLE lab_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 
--- Basic Policies (Admin has full access)
+-- Basic Policies (Admin/Authenticated has full access)
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
 CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
 CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+-- HMS Module Policies (Permissive for Authenticated Users)
+DO $$ 
+DECLARE 
+    t text;
+BEGIN 
+    FOR t IN SELECT table_name 
+             FROM information_schema.tables 
+             WHERE table_schema = 'public' 
+             AND table_name IN ('patients', 'appointments', 'consultations', 'inventory', 'wards', 'beds', 'lab_tests', 'lab_orders', 'invoices', 'payments')
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS "Enable all for authenticated users" ON %I', t);
+        EXECUTE format('CREATE POLICY "Enable all for authenticated users" ON %I FOR ALL TO authenticated USING (true) WITH CHECK (true)', t);
+    END LOOP;
+END $$;
 
 -- Trigger for New User Creation (Supabase Edge Hook)
 -- This function will automatically create a entry in "profiles" when a user signs up in auth.users
