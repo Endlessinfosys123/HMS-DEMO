@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { CreditCard, Download, FileText, Search, Plus, Trash2, CheckCircle } from 'lucide-react';
+import { Download, FileText, Search, Plus, Trash2, CheckCircle } from 'lucide-react';
 import { Modal } from '../components/Modal';
 
 export const Billing = () => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Calendar as CalendarIcon, Clock, User, Plus, Check, XCircle, CheckCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Plus, Check, XCircle } from 'lucide-react';
 import { Modal } from '../components/Modal';
 
 export const Appointments = () => {
