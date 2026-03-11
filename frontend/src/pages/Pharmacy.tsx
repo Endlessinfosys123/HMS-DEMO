@@ -222,14 +222,19 @@ export const Pharmacy = () => {
                     </div>
 
                     {posItem && (
-                        <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.05)', marginBottom: '1.5rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                <span className="text-muted">Unit Price:</span>
-                                <span>${posItem.price.toFixed(2)}</span>
+                        <div style={{ padding: '20px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(115, 63, 241, 0.1))', marginBottom: '1.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+                                <span className="text-muted">Item:</span>
+                                <span style={{ fontWeight: '600' }}>{posItem.item_name}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                <span>Total Amount:</span>
-                                <span className="text-accent">${(posItem.price * sellQuantity).toFixed(2)}</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+                                <span className="text-muted">Price x Qty:</span>
+                                <span>${posItem.price.toFixed(2)} x {sellQuantity}</span>
+                            </div>
+                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '12px 0', borderStyle: 'dashed', borderWidth: '1px 0 0 0' }}></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                                <span>Total:</span>
+                                <span className="text-accent" style={{ color: 'var(--accent-primary)' }}>${(posItem.price * sellQuantity).toFixed(2)}</span>
                             </div>
                         </div>
                     )}
