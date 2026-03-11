@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, ExternalLink, ClipboardList, Stethoscope } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Patients = () => {
     const { profile } = useAuth();
+    const navigate = useNavigate();
     const [patients, setPatients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -339,7 +341,13 @@ export const Patients = () => {
                                             >
                                                 <Stethoscope size={14} />
                                             </button>
-                                            <button className="btn btn-outline" style={{ padding: '6px' }}><ExternalLink size={14} /></button>
+                                            <button 
+                                                className="btn btn-outline" 
+                                                style={{ padding: '6px' }}
+                                                onClick={() => navigate(`/patients/${p.id}`)}
+                                            >
+                                                <ExternalLink size={14} />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>

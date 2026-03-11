@@ -12,7 +12,11 @@ import {
     Bell,
     Search,
     TestTube,
-    Shield
+    Shield,
+    BarChart3,
+    MessageSquare,
+    Sparkles,
+    X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -35,6 +39,7 @@ const Sidebar = () => {
                 <SidebarLink to="/pharmacy" icon={<Pill size={20} />} label="Pharmacy" />
                 <SidebarLink to="/billing" icon={<CreditCard size={20} />} label="Billing" />
                 <SidebarLink to="/staff" icon={<Shield size={20} />} label="Staff / HR" />
+                <SidebarLink to="/reports" icon={<BarChart3 size={20} />} label="Reports" />
 
                 <div style={{ height: '32px' }} />
                 <SidebarLink to="/settings" icon={<Settings size={20} />} label="Settings" />
@@ -117,7 +122,7 @@ const Header = () => {
                                 key={r.id} 
                                 onClick={() => {
                                     setSearchQuery('');
-                                    navigate(`/patients`); // In a real app, go to specific patient
+                                    navigate(`/patients/${r.id}`);
                                 }}
                                 style={{ padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                                 className="patient-row"
@@ -181,6 +186,8 @@ const NotificationItem = ({ title, time, desc }: { title: string, time: string, 
 );
 
 export const Layout = () => {
+    const [isBotOpen, setIsBotOpen] = useState(false);
+
     return (
         <div className="app-container">
             <Sidebar />
@@ -189,6 +196,69 @@ export const Layout = () => {
                 <main className="content-area">
                     <Outlet />
                 </main>
+            </div>
+
+            {/* KiviBot Floating AI Assistant */}
+            <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 2000 }}>
+                {isBotOpen && (
+                    <div className="glass-card animate-scale-in" style={{ 
+                        width: '350px', 
+                        height: '500px', 
+                        marginBottom: '20px', 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        padding: '0',
+                        overflow: 'hidden',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                        border: '1px solid var(--accent-primary)'
+                    }}>
+                        <div style={{ background: 'var(--accent-primary)', padding: '16px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Sparkles size={18} />
+                                <span style={{ fontWeight: 'bold' }}>KiviBot AI</span>
+                            </div>
+                            <button onClick={() => setIsBotOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>
+                                <LogOut size={16} />
+                            </button>
+                        </div>
+                        <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div className="bot-msg" style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px 12px 12px 0', fontSize: '0.85rem' }}>
+                                Hello! I'm KiviBot, your HMS assistant. How can I help you navigate the system today?
+                            </div>
+                            <div className="bot-msg" style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px 12px 12px 0', fontSize: '0.85rem' }}>
+                                You can ask me to "Find Dr. Smith" or "Show today's revenue report".
+                            </div>
+                        </div>
+                        <div style={{ padding: '16px', borderTop: '1px solid var(--border-light)' }}>
+                            <input 
+                                type="text" 
+                                placeholder="Type your query..." 
+                                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-light)', borderRadius: '8px', padding: '10px', color: '#fff' }}
+                            />
+                        </div>
+                    </div>
+                )}
+                <button 
+                    onClick={() => setIsBotOpen(!isBotOpen)}
+                    style={{ 
+                        width: '60px', 
+                        height: '60px', 
+                        borderRadius: '50%', 
+                        background: 'var(--accent-primary)', 
+                        color: '#fff', 
+                        border: 'none', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        boxShadow: '0 10px 20px rgba(59, 130, 246, 0.4)',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                    onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                    {isBotOpen ? <X size={24} /> : <MessageSquare size={24} />}
+                </button>
             </div>
         </div>
     );

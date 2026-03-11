@@ -10,7 +10,9 @@ import { Beds } from './pages/Beds';
 import { Pharmacy } from './pages/Pharmacy';
 import { Billing } from './pages/Billing';
 import { Lab } from './pages/Lab';
+import { PatientProfile } from './pages/PatientProfile';
 import { Staff } from './pages/Staff';
+import { Reports } from './pages/Reports';
 import { Settings } from './pages/Settings';
 
 function App() {
@@ -27,6 +29,7 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="patients" element={<Patients />} />
+          <Route path="patients/:id" element={<PatientProfile />} />
           <Route path="appointments" element={<Appointments />} />
           <Route path="inpatients" element={<Inpatients />} />
           <Route path="beds" element={<Beds />} />
@@ -34,6 +37,7 @@ function App() {
           <Route path="billing" element={<Billing />} />
           <Route path="lab" element={<Lab />} />
           <Route path="staff" element={<Staff />} />
+          <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
           {/* Add more routes here in Phase 3 */}
         </Route>
