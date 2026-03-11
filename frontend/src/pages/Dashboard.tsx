@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { 
     Users, 
@@ -34,9 +36,9 @@ export const Dashboard = () => {
             supabase.from('beds').select('id, is_occupied')
         ]);
 
-        const totalRevenue = revenueRes.data?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
+        const totalRevenue = revenueRes.data?.reduce((sum: number, inv: any) => sum + Number(inv.amount), 0) || 0;
         const totalBeds = bedsRes.data?.length || 0;
-        const occupiedBeds = bedsRes.data?.filter(b => b.is_occupied).length || 0;
+        const occupiedBeds = bedsRes.data?.filter((b: any) => b.is_occupied).length || 0;
         const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
 
         setStats({
@@ -111,7 +113,7 @@ export const Dashboard = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {loading ? (
                             <p className="text-muted">Loading data...</p>
-                        ) : recentAdmissions.length > 0 ? recentAdmissions.map((p) => (
+                        ) : recentAdmissions.length > 0 ? recentAdmissions.map((p: any) => (
                             <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
@@ -160,7 +162,7 @@ export const Dashboard = () => {
                             <button onClick={() => navigate('/doctors')} className="btn btn-outline" style={{ fontSize: '0.7rem', padding: '4px 8px' }}>View All</button>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {topDoctors.map(doc => (
+                            {topDoctors.map((doc: any) => (
                                 <div 
                                     key={doc.id} 
                                     onClick={() => navigate(`/doctors/${doc.id}`)}
