@@ -26,7 +26,6 @@ export const Reports = () => {
     }, []);
 
     const fetchReportData = async () => {
-        setLoading(true);
         // Mock data fetching for reports summary
         const [revenueRes, patientsRes, bedsRes, labsRes] = await Promise.all([
             supabase.from('invoices').select('amount').eq('status', 'PAID'),
