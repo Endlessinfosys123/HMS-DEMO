@@ -1,31 +1,108 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { BedDouble, Info } from 'lucide-react';
+import { Modal } from '../components/Modal';
 
 export const Beds = () => {
     const [wards, setWards] = useState<any[]>([]);
+    const [patients, setPatients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    // Admission Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [selectedBed, setSelectedBed] = useState<any>(null);
+    const [patientId, setPatientId] = useState('');
 
     useEffect(() => {
-        fetchWards();
+        fetchInitialData();
     }, []);
 
-    const fetchWards = async () => {
+    const fetchInitialData = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('wards')
-            .select('*, beds(*)');
+        const [wardsRes, patientsRes] = await Promise.all([
+            supabase.from('wards').select('*, beds(*)'),
+            supabase.from('patients').select('id, first_name, last_name')
+        ]);
 
-        if (!error) setWards(data || []);
+        if (!wardsRes.error) setWards(wardsRes.data || []);
+        if (!patientsRes.error) setPatients(patientsRes.data || []);
         setLoading(false);
+    };
+
+    const handleAssignBed = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        
+        const { error } = await supabase
+            .from('beds')
+            .update({ 
+                is_occupied: true, 
+                current_patient_id: patientId 
+            })
+            .eq('id', selectedBed.id);
+
+        if (!error) {
+            setIsModalOpen(false);
+            setSelectedBed(null);
+            setPatientId('');
+            fetchInitialData();
+        } else {
+            alert('Error assigning bed: ' + error.message);
+        }
+        setSubmitting(false);
+    };
+
+    const handleReleaseBed = async (bedId: string) => {
+        if (!confirm('Are you sure you want to discharge the patient from this bed?')) return;
+        const { error } = await supabase
+            .from('beds')
+            .update({ 
+                is_occupied: false, 
+                current_patient_id: null 
+            })
+            .eq('id', bedId);
+
+        if (!error) fetchInitialData();
     };
 
     return (
         <div className="animate-fade-in">
             <div style={{ marginBottom: '2rem' }}>
                 <h1 className="text-3xl">Ward & Bed Occupancy</h1>
-                <p className="text-muted">Real-time monitoring of hospital capacity.</p>
+                <p className="text-muted">Real-time monitoring of hospital capacity and patient admissions.</p>
             </div>
+
+            <Modal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                title={`Assign Bed: ${selectedBed?.bed_number}`}
+            >
+                <form onSubmit={handleAssignBed}>
+                    <p className="text-muted mb-4">Please select a patient to admit to this bed.</p>
+                    <div className="form-group">
+                        <label className="form-label">Patient</label>
+                        <select 
+                            className="form-input" 
+                            required 
+                            value={patientId}
+                            onChange={(e) => setPatientId(e.target.value)}
+                            style={{ background: 'var(--bg-sidebar)' }}
+                        >
+                            <option value="">Select Patient</option>
+                            {patients.map(p => (
+                                <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex-end">
+                        <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" disabled={submitting}>
+                            {submitting ? 'Assigning...' : 'Confirm Admission'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
                 {loading ? (
@@ -62,18 +139,29 @@ export const Beds = () => {
                                     <div
                                         key={bed.id}
                                         title={`Bed ${bed.bed_number} - ${bed.is_occupied ? 'Occupied' : 'Free'}`}
+                                        onClick={() => {
+                                            if (bed.is_occupied) {
+                                                handleReleaseBed(bed.id);
+                                            } else {
+                                                setSelectedBed(bed);
+                                                setIsModalOpen(true);
+                                            }
+                                        }}
                                         style={{
                                             aspectRatio: '1',
                                             borderRadius: '6px',
                                             background: bed.is_occupied ? 'var(--status-danger)' : 'rgba(255,255,255,0.05)',
-                                            opacity: bed.is_occupied ? 0.6 : 1,
+                                            opacity: bed.is_occupied ? 0.8 : 1,
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            color: bed.is_occupied ? '#fff' : 'var(--text-muted)'
+                                            color: bed.is_occupied ? '#fff' : 'var(--text-muted)',
+                                            cursor: 'pointer',
+                                            border: '1px solid var(--border-light)'
                                         }}
+                                        className="bed-icon"
                                     >
-                                        <BedDouble size={14} />
+                                        <BedDouble size={16} />
                                     </div>
                                 ))}
                             </div>

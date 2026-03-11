@@ -11,9 +11,11 @@ import {
     LogOut,
     Bell,
     Search,
-    TestTube
+    TestTube,
+    Shield
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const Sidebar = () => {
     return (
@@ -32,6 +34,7 @@ const Sidebar = () => {
                 <SidebarLink to="/lab" icon={<TestTube size={20} />} label="Laboratory" />
                 <SidebarLink to="/pharmacy" icon={<Pill size={20} />} label="Pharmacy" />
                 <SidebarLink to="/billing" icon={<CreditCard size={20} />} label="Billing" />
+                <SidebarLink to="/staff" icon={<Shield size={20} />} label="Staff / HR" />
 
                 <div style={{ height: '32px' }} />
                 <SidebarLink to="/settings" icon={<Settings size={20} />} label="Settings" />
@@ -62,6 +65,9 @@ const SidebarLink = ({ to, icon, label }: { to: string, icon: React.ReactNode, l
 const Header = () => {
     const { profile, signOut } = useAuth();
     const [showNotifications, setShowNotifications] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -69,15 +75,61 @@ const Header = () => {
         navigate('/login');
     };
 
+    const handleSearch = async (query: string) => {
+        setSearchQuery(query);
+        if (query.length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        setIsSearching(true);
+        const { data } = await supabase
+            .from('patients')
+            .select('id, first_name, last_name')
+            .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%`)
+            .limit(5);
+        
+        setSearchResults(data || []);
+        setIsSearching(false);
+    };
+
     return (
         <header className="top-header">
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '8px 16px', width: '400px' }}>
-                <Search size={18} className="text-muted" style={{ marginRight: '8px' }} />
-                <input
-                    type="text"
-                    placeholder="Search patients, records..."
-                    style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
-                />
+            <div style={{ position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '8px 16px', width: '400px' }}>
+                    <Search size={18} className="text-muted" style={{ marginRight: '8px' }} />
+                    <input
+                        type="text"
+                        placeholder="Search patients..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
+                    />
+                </div>
+
+                {searchQuery.length >= 2 && (
+                    <div className="glass-card" style={{ position: 'absolute', top: '50px', left: '0', width: '400px', zIndex: 1100, padding: '8px' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '8px' }}>Search Results</p>
+                        {isSearching ? (
+                            <p style={{ padding: '8px', fontSize: '0.85rem' }}>Searching...</p>
+                        ) : searchResults.length > 0 ? searchResults.map(r => (
+                            <div 
+                                key={r.id} 
+                                onClick={() => {
+                                    setSearchQuery('');
+                                    navigate(`/patients`); // In a real app, go to specific patient
+                                }}
+                                style={{ padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                                className="patient-row"
+                            >
+                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>{r.first_name[0]}</div>
+                                <span style={{ fontSize: '0.9rem' }}>{r.first_name} {r.last_name}</span>
+                            </div>
+                        )) : (
+                            <p style={{ padding: '8px', fontSize: '0.85rem' }}>No patients found.</p>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -93,11 +145,11 @@ const Header = () => {
 
                     {showNotifications && (
                         <div className="glass-card" style={{ position: 'absolute', top: '50px', right: '0', width: '320px', zIndex: 1000, padding: '16px' }}>
-                            <h4 className="mb-4">Notifications</h4>
+                            <h4 className="mb-4">Recent Alerts</h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <NotificationItem title="Emergency Admission" time="Just now" desc="Critical patient assigned to Ward-A / Bed 102." />
                                 <NotificationItem title="New Appointment" time="5m ago" desc="Patient John Doe scheduled an appointment." />
                                 <NotificationItem title="Low Stock Alert" time="2h ago" desc="Paracetamol 500mg is running low (8 items left)." />
-                                <NotificationItem title="Lab Result Ready" time="1d ago" desc="Lab results for Patient Sarah Jenkins are available." />
                             </div>
                         </div>
                     )}

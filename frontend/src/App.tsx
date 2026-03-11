@@ -10,6 +10,7 @@ import { Beds } from './pages/Beds';
 import { Pharmacy } from './pages/Pharmacy';
 import { Billing } from './pages/Billing';
 import { Lab } from './pages/Lab';
+import { Staff } from './pages/Staff';
 import { Settings } from './pages/Settings';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
           <Route path="pharmacy" element={<Pharmacy />} />
           <Route path="billing" element={<Billing />} />
           <Route path="lab" element={<Lab />} />
+          <Route path="staff" element={<Staff />} />
           <Route path="settings" element={<Settings />} />
           {/* Add more routes here in Phase 3 */}
         </Route>

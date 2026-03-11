@@ -1,10 +1,24 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Pill, Plus, Search, AlertTriangle, ShoppingCart } from 'lucide-react';
+import { Pill, Plus, Search, AlertTriangle, ShoppingCart, Trash2 } from 'lucide-react';
+import { Modal } from '../components/Modal';
 
 export const Pharmacy = () => {
     const [inventory, setInventory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPOSOpen, setIsPOSOpen] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [posItem, setPosItem] = useState<any>(null);
+    const [sellQuantity, setSellQuantity] = useState(1);
+
+    const [formData, setFormData] = useState({
+        item_name: '',
+        category: 'Medicine',
+        stock_quantity: 0,
+        price: 0,
+        supplier: ''
+    });
 
     useEffect(() => {
         fetchInventory();
@@ -21,6 +35,60 @@ export const Pharmacy = () => {
         setLoading(false);
     };
 
+    const handleAddItem = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        
+        const { error } = await supabase
+            .from('inventory')
+            .insert([formData]);
+
+        if (!error) {
+            setIsModalOpen(false);
+            setFormData({
+                item_name: '',
+                category: 'Medicine',
+                stock_quantity: 0,
+                price: 0,
+                supplier: ''
+            });
+            fetchInventory();
+        } else {
+            alert('Error adding item: ' + error.message);
+        }
+        setSubmitting(false);
+    };
+
+    const handleSell = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!posItem || sellQuantity > posItem.stock_quantity) {
+            alert('Insufficient stock!');
+            return;
+        }
+        setSubmitting(true);
+        
+        const { error } = await supabase
+            .from('inventory')
+            .update({ stock_quantity: posItem.stock_quantity - sellQuantity })
+            .eq('id', posItem.id);
+
+        if (!error) {
+            setIsPOSOpen(false);
+            setSellQuantity(1);
+            fetchInventory();
+            alert(`Sold ${sellQuantity} x ${posItem.item_name}`);
+        } else {
+            alert('Error during sale: ' + error.message);
+        }
+        setSubmitting(false);
+    };
+
+    const deleteItem = async (id: string) => {
+        if (!confirm('Are you sure you want to remove this item?')) return;
+        const { error } = await supabase.from('inventory').delete().eq('id', id);
+        if (!error) fetchInventory();
+    };
+
     return (
         <div className="animate-fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -29,10 +97,151 @@ export const Pharmacy = () => {
                     <p className="text-muted">Monitor stock levels and manage medication catalog.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    <button className="btn btn-outline"><ShoppingCart size={18} /> Point of Sale</button>
-                    <button className="btn btn-primary"><Plus size={18} /> Add Medicine</button>
+                    <button className="btn btn-outline" onClick={() => setIsPOSOpen(true)}><ShoppingCart size={18} /> Point of Sale</button>
+                    <button 
+                        className="btn btn-primary"
+                        onClick={() => setIsModalOpen(true)}
+                    >
+                        <Plus size={18} /> Add Medicine
+                    </button>
                 </div>
             </div>
+
+            <Modal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                title="Add New Inventory Item"
+                size="md"
+            >
+                <form onSubmit={handleAddItem}>
+                    <div className="form-group">
+                        <label className="form-label">Item Name</label>
+                        <input 
+                            className="form-input" 
+                            required 
+                            value={formData.item_name}
+                            onChange={(e) => setFormData({...formData, item_name: e.target.value})}
+                            placeholder="e.g. Paracetamol 500mg"
+                        />
+                    </div>
+
+                    <div className="grid-2">
+                        <div className="form-group">
+                            <label className="form-label">Category</label>
+                            <select 
+                                className="form-input" 
+                                value={formData.category}
+                                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                                style={{ background: 'var(--bg-sidebar)' }}
+                            >
+                                <option value="Medicine">Medicine</option>
+                                <option value="Equipment">Equipment</option>
+                                <option value="Consumable">Consumable</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Supplier</label>
+                            <input 
+                                className="form-input" 
+                                value={formData.supplier}
+                                onChange={(e) => setFormData({...formData, supplier: e.target.value})}
+                                placeholder="Generic Corp"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid-2">
+                        <div className="form-group">
+                            <label className="form-label">Initial Stock</label>
+                            <input 
+                                type="number"
+                                className="form-input" 
+                                required 
+                                value={formData.stock_quantity}
+                                onChange={(e) => setFormData({...formData, stock_quantity: Number(e.target.value)})}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Unit Price ($)</label>
+                            <input 
+                                type="number"
+                                step="0.01"
+                                className="form-input" 
+                                required 
+                                value={formData.price}
+                                onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex-end">
+                        <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" disabled={submitting}>
+                            {submitting ? 'Adding...' : 'Add to Inventory'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Point of Sale Modal */}
+            <Modal
+                isOpen={isPOSOpen}
+                onClose={() => setIsPOSOpen(false)}
+                title="Point of Sale / Dispensing"
+                size="md"
+            >
+                <form onSubmit={handleSell}>
+                    <div className="form-group">
+                        <label className="form-label">Select Item</label>
+                        <select 
+                            className="form-input" 
+                            required
+                            style={{ background: 'var(--bg-sidebar)' }}
+                            onChange={(e) => {
+                                const item = inventory.find(i => i.id === e.target.value);
+                                setPosItem(item);
+                            }}
+                        >
+                            <option value="">Select Medication</option>
+                            {inventory.filter(i => i.stock_quantity > 0).map(i => (
+                                <option key={i.id} value={i.id}>{i.item_name} (Stock: {i.stock_quantity})</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Quantity</label>
+                        <input 
+                            type="number" 
+                            className="form-input" 
+                            min={1} 
+                            max={posItem?.stock_quantity || 1}
+                            value={sellQuantity}
+                            onChange={(e) => setSellQuantity(Number(e.target.value))}
+                        />
+                    </div>
+
+                    {posItem && (
+                        <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.05)', marginBottom: '1.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span className="text-muted">Unit Price:</span>
+                                <span>${posItem.price.toFixed(2)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                <span>Total Amount:</span>
+                                <span className="text-accent">${(posItem.price * sellQuantity).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex-end">
+                        <button type="button" className="btn btn-outline" onClick={() => setIsPOSOpen(false)}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" disabled={submitting || !posItem}>
+                            {submitting ? 'Processing...' : 'Complete Sale'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             <div className="glass-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
@@ -81,7 +290,13 @@ export const Pharmacy = () => {
                                     </td>
                                     <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{item.supplier || 'Generic Corp'}</td>
                                     <td style={{ padding: '16px', textAlign: 'right' }}>
-                                        <button className="btn btn-outline" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>Edit</button>
+                                        <button 
+                                            className="btn btn-outline" 
+                                            style={{ fontSize: '0.8rem', padding: '6px 12px', color: 'var(--status-danger)' }}
+                                            onClick={() => deleteItem(item.id)}
+                                        >
+                                            <Trash2 size={14} style={{ marginRight: '4px' }} /> Remove
+                                        </button>
                                     </td>
                                 </tr>
                             )) : (
