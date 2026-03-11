@@ -89,7 +89,7 @@ export const Dashboard = () => {
                 />
                 <StatCard 
                     title="Net Revenue" 
-                    value={`$${stats.revenue.toLocaleString()}`} 
+                    value={`₹${stats.revenue.toLocaleString()}`} 
                     icon={<CreditCard size={24} />} 
                     trend="+5.4% vs last week"
                     color="var(--status-success)"

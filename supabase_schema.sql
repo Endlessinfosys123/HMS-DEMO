@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 6. Consultations & Prescriptions
+-- 6. Consultations
 CREATE TABLE IF NOT EXISTS consultations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   appointment_id UUID REFERENCES appointments(id) ON DELETE SET NULL,
@@ -60,6 +60,20 @@ CREATE TABLE IF NOT EXISTS consultations (
   symptoms TEXT,
   diagnosis TEXT,
   notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 6.5 Prescriptions (EMR Integration)
+CREATE TABLE IF NOT EXISTS prescriptions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  consultation_id UUID REFERENCES consultations(id) ON DELETE CASCADE,
+  patient_id UUID REFERENCES patients(id) ON DELETE CASCADE,
+  doctor_id UUID REFERENCES auth.users(id),
+  medication_name TEXT NOT NULL,
+  dosage TEXT,
+  frequency TEXT,
+  duration TEXT,
+  instructions TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -140,6 +154,7 @@ ALTER TABLE lab_tests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lab_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prescriptions ENABLE ROW LEVEL SECURITY;
 
 -- Basic Policies (Admin/Authenticated has full access)
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
@@ -156,7 +171,7 @@ BEGIN
     FOR t IN SELECT table_name 
              FROM information_schema.tables 
              WHERE table_schema = 'public' 
-             AND table_name IN ('patients', 'appointments', 'consultations', 'inventory', 'wards', 'beds', 'lab_tests', 'lab_orders', 'invoices', 'payments')
+             AND table_name IN ('patients', 'appointments', 'consultations', 'inventory', 'wards', 'beds', 'lab_tests', 'lab_orders', 'invoices', 'payments', 'prescriptions')
     LOOP
         EXECUTE format('DROP POLICY IF EXISTS "Enable all for authenticated users" ON %I', t);
         EXECUTE format('CREATE POLICY "Enable all for authenticated users" ON %I FOR ALL TO authenticated USING (true) WITH CHECK (true)', t);

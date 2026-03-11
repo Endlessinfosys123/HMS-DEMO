@@ -4,9 +4,7 @@ import { supabase } from '../lib/supabase';
 import { 
     ArrowLeft, 
     Calendar, 
-    ClipboardList, 
     Clock, 
-    Star, 
     Award, 
     Users, 
     Activity,
@@ -90,35 +88,45 @@ export const DoctorProfile = () => {
 
                     <div className="glass-card" style={{ background: 'rgba(115, 63, 241, 0.05)' }}>
                         <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Activity size={18} className="text-accent" style={{ color: '#733FF1' }} /> Patient Rating
+                            <Activity size={18} className="text-accent" style={{ color: '#733FF1' }} /> Professional Bio
                         </h4>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <h2 style={{ margin: 0 }}>4.9</h2>
-                            <div style={{ display: 'flex', color: '#F59E0B' }}>
-                                <Star size={14} fill="#F59E0B" />
-                                <Star size={14} fill="#F59E0B" />
-                                <Star size={14} fill="#F59E0B" />
-                                <Star size={14} fill="#F59E0B" />
-                                <Star size={14} fill="#F59E0B" />
+                        <p style={{ fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
+                            Senior Specialist with extensive experience in clinical management and patient care pathways. Lead coordinator for the department's digital health initiative.
+                        </p>
+                    </div>
+
+                    <div className="glass-card" style={{ padding: '20px' }}>
+                        <h4 className="mb-4">Medical Credentials</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <Award size={16} className="text-accent" />
+                                <span style={{ fontSize: '0.8rem' }}>MD - Internal Medicine</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <CheckCircle size={16} className="text-success" />
+                                <span style={{ fontSize: '0.8rem' }}>Board Certified (IMA)</span>
                             </div>
                         </div>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Based on 124 patient reviews this quarter.</p>
                     </div>
                 </div>
 
                 {/* Schedule & History Tabs */}
                 <div>
                     <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', background: 'var(--bg-sidebar)', padding: '4px', borderRadius: '12px', width: 'fit-content' }}>
-                        <TabButton active={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')} icon={<Calendar size={16} />} label="Upcoming Schedule" />
-                        <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<ClipboardList size={16} />} label="Professional History" />
+                        <TabButton active={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')} icon={<Calendar size={16} />} label="Clinic Schedule" />
+                        <TabButton active={activeTab === 'patients'} onClick={() => setActiveTab('patients')} icon={<Users size={16} />} label="Patient History" />
+                        <TabButton active={activeTab === 'performance'} onClick={() => setActiveTab('performance')} icon={<Activity size={16} />} label="Performance" />
                     </div>
 
-                    <div className="glass-card" style={{ minHeight: '500px' }}>
+                    <div className="glass-card" style={{ minHeight: '550px' }}>
                         {activeTab === 'schedule' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <h4 style={{ margin: 0 }}>Today's Appointments</h4>
-                                    <button className="btn btn-primary" style={{ fontSize: '0.8rem', padding: '6px 12px' }}><Plus size={14} /> Add Booking</button>
+                                    <h4 style={{ margin: 0 }}>Upcoming Appointments</h4>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button className="btn btn-outline" style={{ fontSize: '0.8rem' }}>Today</button>
+                                        <button className="btn btn-primary" style={{ fontSize: '0.8rem', padding: '6px 12px' }}><Plus size={14} /> Add Booking</button>
+                                    </div>
                                 </div>
                                 {appointments.length > 0 ? appointments.map((app) => (
                                     <div key={app.id} style={{ 
@@ -129,31 +137,78 @@ export const DoctorProfile = () => {
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center'
-                                    }}>
+                                    }} className="doctor-card">
                                         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
                                                 {app.patients?.first_name[0]}{app.patients?.last_name[0]}
                                             </div>
                                             <div>
                                                 <p style={{ margin: 0, fontWeight: '600' }}>{app.patients?.first_name} {app.patients?.last_name}</p>
-                                                <p className="text-muted" style={{ margin: 0, fontSize: '0.75rem' }}>{new Date(app.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {app.reason || 'Regular Checkup'}</p>
+                                                <div style={{ display: 'flex', gap: '12px' }}>
+                                                    <p className="text-muted" style={{ margin: 0, fontSize: '0.75rem' }}>{new Date(app.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                    <p className="text-accent" style={{ margin: 0, fontSize: '0.75rem', fontWeight: 'bold' }}>{app.reason || 'Checkup'}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <button className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>Check In</button>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button className="btn btn-outline" style={{ fontSize: '0.7rem', padding: '4px 8px' }}>Reschedule</button>
+                                            <button className="btn btn-primary" style={{ fontSize: '0.7rem', padding: '4px 8px' }}>Check In</button>
+                                        </div>
                                     </div>
                                 )) : (
-                                    <div style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                        <CheckCircle size={48} style={{ opacity: 0.1, marginBottom: '16px' }} />
-                                        <p>No appointments scheduled for the next 24 hours.</p>
+                                    <div style={{ padding: '80px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        <Calendar size={48} style={{ opacity: 0.1, marginBottom: '16px' }} />
+                                        <p>No appointments scheduled.</p>
                                     </div>
                                 )}
                             </div>
                         )}
 
-                        {activeTab === 'history' && (
-                            <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '100px' }}>
-                                <Award size={48} style={{ opacity: 0.1, marginBottom: '16px' }} />
-                                <p>Past professional records and clinical outcome reports are currently being archived.</p>
+                        {activeTab === 'patients' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <h4>Recently Consulted Patients</h4>
+                                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ background: 'rgba(255,255,255,0.03)', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                                <th style={{ padding: '12px' }}>PATIENT</th>
+                                                <th style={{ padding: '12px' }}>LAST VISIT</th>
+                                                <th style={{ padding: '12px' }}>DIAGNOSIS</th>
+                                                <th style={{ padding: '12px' }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr style={{ borderBottom: '1px solid var(--border-light)' }}>
+                                                <td style={{ padding: '12px', fontSize: '0.85rem', fontWeight: '600' }}>Rajesh Kumar</td>
+                                                <td style={{ padding: '12px', fontSize: '0.85rem' }}>12 Oct 2023</td>
+                                                <td style={{ padding: '12px', fontSize: '0.85rem' }}>Hypertension</td>
+                                                <td style={{ padding: '12px' }}><button className="btn btn-outline" style={{ padding: '4px' }}><Plus size={14} /></button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'performance' && (
+                            <div style={{ padding: '20px' }}>
+                                <h4>Clinical Performance Metrics</h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginTop: '20px' }}>
+                                    <div className="glass-card" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                        <p className="text-muted text-xs mb-1">Monthly Consultations</p>
+                                        <h3 className="text-xl font-bold">142</h3>
+                                        <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginTop: '10px' }}>
+                                            <div style={{ width: '70%', height: '100%', background: 'var(--accent-primary)', borderRadius: '2px' }}></div>
+                                        </div>
+                                    </div>
+                                    <div className="glass-card" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                        <p className="text-muted text-xs mb-1">Patient Satisfaction</p>
+                                        <h3 className="text-xl font-bold">98.2%</h3>
+                                        <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginTop: '10px' }}>
+                                            <div style={{ width: '98%', height: '100%', background: 'var(--status-success)', borderRadius: '2px' }}></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

@@ -9,7 +9,6 @@ import {
     FileText,
     Calendar,
     ChevronRight,
-    Search,
     CreditCard
 } from 'lucide-react';
 
@@ -60,7 +59,7 @@ export const Reports = () => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-                <ReportStatCard title="Financial Growth" value={`$${stats.totalRevenue.toLocaleString()}`} icon={<TrendingUp size={20} />} change="+12.4%" color="var(--status-success)" />
+                <ReportStatCard title="Financial Growth" value={`₹${stats.totalRevenue.toLocaleString()}`} icon={<TrendingUp size={20} />} change="+12.4%" color="var(--status-success)" />
                 <ReportStatCard title="Patient Intake" value={stats.patientGrowth.toString()} icon={<Users size={20} />} change="+5" color="var(--accent-primary)" />
                 <ReportStatCard title="Bed Utilization" value={`${stats.bedOccupancy}%`} icon={<Activity size={20} />} change="-2%" color="var(--status-warning)" />
                 <ReportStatCard title="Lab Efficiency" value={stats.labTests.toString()} icon={<BarChart3 size={20} />} change="+24.2%" color="var(--status-info)" />
@@ -80,24 +79,43 @@ export const Reports = () => {
 
                 {/* Searchable Records List */}
                 <div className="glass-card">
-                    <h4 className="mb-4">Internal Search</h4>
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '10px 16px', marginBottom: '20px' }}>
-                        <Search size={18} className="text-muted" style={{ marginRight: '8px' }} />
-                        <input
-                            type="text"
-                            placeholder="Find specific transaction..."
-                            style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
-                        />
+                    <h4 className="mb-4">Live Patient Inflow</h4>
+                    <div style={{ height: '200px', display: 'flex', alignItems: 'flex-end', gap: '8px', padding: '20px 0' }}>
+                        {[40, 70, 45, 90, 65, 80, 50, 85, 95, 60, 75, 55].map((h, i) => (
+                            <div key={i} style={{ flex: 1, background: 'linear-gradient(to top, var(--accent-primary), var(--accent-secondary))', height: `${h}%`, borderRadius: '4px', opacity: 0.8 }}></div>
+                        ))}
                     </div>
-                    <div className="text-muted text-sm" style={{ textAlign: 'center', padding: '40px' }}>
-                        <BarChart3 size={40} style={{ opacity: 0.1, margin: '0 auto 12px' }} />
-                        Enter parameters to generate a live data visualization.
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-light)', paddingTop: '10px' }}>
+                        <span>Jan</span>
+                        <span>Jun</span>
+                        <span>Dec</span>
                     </div>
+                </div>
+            </div>
+
+            <div className="glass-card" style={{ marginTop: '24px' }}>
+                <h4 className="mb-6">Operational Efficiency Index</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '48px' }}>
+                    <EfficiencyMeter label="Avg Wait Time" value="12m" percentage={20} color="var(--status-success)" />
+                    <EfficiencyMeter label="Discharge Rate" value="94%" percentage={94} color="var(--accent-primary)" />
+                    <EfficiencyMeter label="Bed Turnover" value="2.4d" percentage={60} color="var(--status-info)" />
                 </div>
             </div>
         </div>
     );
 };
+
+const EfficiencyMeter = ({ label, value, percentage, color }: any) => (
+    <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{label}</span>
+            <span style={{ fontWeight: 'bold' }}>{value}</span>
+        </div>
+        <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ width: `${percentage}%`, height: '100%', background: color, borderRadius: '3px' }}></div>
+        </div>
+    </div>
+);
 
 const ReportStatCard = ({ title, value, icon, change, color }: any) => (
     <div className="glass-card" style={{ padding: '24px' }}>

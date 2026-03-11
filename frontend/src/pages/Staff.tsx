@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Search, Mail, Phone, Edit2, Trash2 } from 'lucide-react';
+import { UserPlus, Search, Mail, Phone, Edit2, Trash2, ArrowRight, ArrowLeft, CheckCircle, IdCard } from 'lucide-react';
 import { Modal } from '../components/Modal';
 
 export const Staff = () => {
@@ -20,6 +20,21 @@ export const Staff = () => {
         role_id: '',
         specialization: ''
     });
+
+    const [registrationStep, setRegistrationStep] = useState(1);
+    const [generatedId, setGeneratedId] = useState('');
+
+    const generateStaffId = () => {
+        const prefix = "HMS-STF-";
+        const randomNum = Math.floor(100 + Math.random() * 900);
+        return `${prefix}${randomNum}`;
+    };
+
+    useEffect(() => {
+        if (registrationStep === 3 && !generatedId) {
+            setGeneratedId(generateStaffId());
+        }
+    }, [registrationStep]);
 
     useEffect(() => {
         fetchInitialData();
@@ -41,10 +56,30 @@ export const Staff = () => {
         e.preventDefault();
         setSubmitting(true);
         
-        // Note: In a real system, you'd use Supabase Auth to create the user.
-        // For this demo, we'll assume the profile can be created or managed.
-        // Creating a full user requires service_role or a custom edge function.
-        alert('Staff registration typically requires administrative auth creation. Profile management is enabled.');
+        const { error } = await supabase
+            .from('profiles')
+            .insert([{
+                ...formData,
+                employee_id: generatedId,
+                created_at: new Date().toISOString()
+            }]);
+
+        if (!error) {
+            setIsModalOpen(false);
+            setRegistrationStep(1);
+            setGeneratedId('');
+            setFormData({
+                first_name: '',
+                last_name: '',
+                email: '',
+                phone: '',
+                role_id: '',
+                specialization: ''
+            });
+            fetchInitialData();
+        } else {
+            alert('Error adding staff: ' + error.message);
+        }
         
         setSubmitting(false);
     };
@@ -66,75 +101,204 @@ export const Staff = () => {
 
             <Modal 
                 isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setRegistrationStep(1);
+                    setGeneratedId('');
+                }} 
                 title="Register New Staff Member"
             >
-                <form onSubmit={handleAddStaff}>
-                    <div className="grid-2">
-                        <div className="form-group">
-                            <label className="form-label">First Name</label>
-                            <input 
-                                className="form-input" 
-                                required 
-                                value={formData.first_name}
-                                onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Last Name</label>
-                            <input 
-                                className="form-input" 
-                                required 
-                                value={formData.last_name}
-                                onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                            />
-                        </div>
+                <div>
+                    {/* Stepper Header */}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '2rem' }}>
+                        {[1, 2, 3].map(s => (
+                            <div key={s} style={{ 
+                                height: '4px', 
+                                flex: 1, 
+                                background: registrationStep >= s ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                                borderRadius: '2px',
+                                transition: 'all 0.3s ease'
+                            }} />
+                        ))}
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Email Address</label>
-                        <input 
-                            type="email"
-                            className="form-input" 
-                            required 
-                            value={formData.email}
-                            onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        />
-                    </div>
+                    <form onSubmit={handleAddStaff}>
+                        {registrationStep === 1 && (
+                            <div className="animate-slide-up">
+                                <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Mail size={20} className="text-accent" /> Basic Information
+                                </h3>
+                                <div className="grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">First Name</label>
+                                        <input 
+                                            className="form-input" 
+                                            required 
+                                            value={formData.first_name}
+                                            onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                                            placeholder="Jane"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Last Name</label>
+                                        <input 
+                                            className="form-input" 
+                                            required 
+                                            value={formData.last_name}
+                                            onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                                            placeholder="Smith"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Email Address</label>
+                                    <input 
+                                        type="email"
+                                        className="form-input" 
+                                        required 
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                        placeholder="jane.smith@hospital.com"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Phone</label>
+                                    <input 
+                                        className="form-input" 
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                        placeholder="+1 (555) 123-4567"
+                                    />
+                                </div>
+                                <div className="flex-end" style={{ marginTop: '2rem' }}>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-primary" 
+                                        onClick={() => setRegistrationStep(2)}
+                                        disabled={!formData.first_name || !formData.last_name || !formData.email}
+                                    >
+                                        Next Details <ArrowRight size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
-                    <div className="grid-2">
-                        <div className="form-group">
-                            <label className="form-label">Phone</label>
-                            <input 
-                                className="form-input" 
-                                value={formData.phone}
-                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Role</label>
-                            <select 
-                                className="form-input" 
-                                required 
-                                value={formData.role_id}
-                                onChange={(e) => setFormData({...formData, role_id: e.target.value})}
-                                style={{ background: 'var(--bg-sidebar)' }}
-                            >
-                                <option value="">Select Role</option>
-                                {roles.map(r => (
-                                    <option key={r.id} value={r.id}>{r.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
+                        {registrationStep === 2 && (
+                            <div className="animate-slide-up">
+                                <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <UserPlus size={20} className="text-accent" /> Professional Role
+                                </h3>
+                                <div className="form-group">
+                                    <label className="form-label">Role</label>
+                                    <select 
+                                        className="form-input" 
+                                        required 
+                                        value={formData.role_id}
+                                        onChange={(e) => setFormData({...formData, role_id: e.target.value})}
+                                        style={{ background: 'var(--bg-sidebar)' }}
+                                    >
+                                        <option value="">Select Role</option>
+                                        {roles.map(r => (
+                                            <option key={r.id} value={r.id}>{r.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Professional Specialization</label>
+                                    <input 
+                                        className="form-input" 
+                                        placeholder="e.g. Senior Surgeon, Head Nurse, HR Manager"
+                                        value={formData.specialization}
+                                        onChange={(e) => setFormData({...formData, specialization: e.target.value})}
+                                    />
+                                </div>
+                                <div className="flex-end" style={{ marginTop: '2rem', gap: '12px' }}>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-outline" 
+                                        onClick={() => setRegistrationStep(1)}
+                                    >
+                                        <ArrowLeft size={18} /> Back
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-primary" 
+                                        onClick={() => setRegistrationStep(3)}
+                                        disabled={!formData.role_id}
+                                    >
+                                        Review Entry <ArrowRight size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
-                    <div className="flex-end">
-                        <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn btn-primary" disabled={submitting}>
-                            {submitting ? 'Registering...' : 'Add Member'}
-                        </button>
-                    </div>
-                </form>
+                        {registrationStep === 3 && (
+                            <div className="animate-slide-up">
+                                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                                    <div style={{ 
+                                        width: '64px', 
+                                        height: '64px', 
+                                        borderRadius: '50%', 
+                                        background: 'rgba(16, 185, 129, 0.1)', 
+                                        color: '#10b981',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        margin: '0 auto 1rem'
+                                    }}>
+                                        <IdCard size={32} />
+                                    </div>
+                                    <h3 style={{ margin: 0 }}>Review Staff Profile</h3>
+                                    <p className="text-muted">Generated ID: <span className="text-accent" style={{ fontWeight: 'bold' }}>{generatedId}</span></p>
+                                </div>
+
+                                <div className="glass-card" style={{ padding: '16px', marginBottom: '2rem', background: 'rgba(255,255,255,0.02)' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Full Name</p>
+                                            <p style={{ fontWeight: '600' }}>{formData.first_name} {formData.last_name}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Role</p>
+                                            <p style={{ fontWeight: '600' }}>{roles.find(r => r.id === formData.role_id)?.name || 'Unknown'}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Email</p>
+                                            <p style={{ fontWeight: '600', fontSize: '0.9rem' }}>{formData.email}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Specialization</p>
+                                            <p style={{ fontWeight: '600' }}>{formData.specialization || 'General'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex-end" style={{ gap: '12px' }}>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-outline" 
+                                        onClick={() => setRegistrationStep(2)}
+                                        disabled={submitting}
+                                    >
+                                        <ArrowLeft size={18} /> Adjust Details
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        className="btn btn-primary"
+                                        disabled={submitting}
+                                        style={{ background: 'var(--status-success)', borderColor: 'var(--status-success)' }}
+                                    >
+                                        {submitting ? 'Adding...' : (
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                Confirm & Add Member <CheckCircle size={18} />
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </form>
+                </div>
             </Modal>
 
             <div className="glass-card">
@@ -177,7 +341,9 @@ export const Staff = () => {
                                             </div>
                                             <div>
                                                 <div style={{ fontWeight: '600' }}>{m.first_name} {m.last_name}</div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.specialization || 'General'}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                    {m.employee_id ? <span className="text-accent" style={{ fontWeight: '600' }}>{m.employee_id}</span> : m.specialization || 'General'}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>

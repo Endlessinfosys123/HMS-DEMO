@@ -18,7 +18,12 @@ export const Lab = () => {
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [resultSubmitting, setResultSubmitting] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
-    const [resultText, setResultText] = useState('');
+    const [resultForm, setResultForm] = useState({
+        value: '',
+        unit: '',
+        flag: 'NORMAL',
+        notes: ''
+    });
 
     useEffect(() => {
         fetchInitialData();
@@ -55,15 +60,17 @@ export const Lab = () => {
     const handleSaveResult = async (e: React.FormEvent) => {
         e.preventDefault();
         setResultSubmitting(true);
+        const formattedResult = `VAL: ${resultForm.value} ${resultForm.unit} | FLAG: ${resultForm.flag} | NOTES: ${resultForm.notes}`;
+        
         const { error } = await supabase
             .from('lab_orders')
-            .update({ result: resultText, status: 'COMPLETED' })
+            .update({ result: formattedResult, status: 'COMPLETED' })
             .eq('id', selectedOrder.id);
 
         if (!error) {
             setIsResultModalOpen(false);
             setSelectedOrder(null);
-            setResultText('');
+            setResultForm({ value: '', unit: '', flag: 'NORMAL', notes: '' });
             fetchInitialData();
         } else {
             alert('Error saving result: ' + error.message);
@@ -132,27 +139,83 @@ export const Lab = () => {
             <Modal isOpen={isResultModalOpen} onClose={() => setIsResultModalOpen(false)} title="Record Test Result">
                 {selectedOrder && (
                     <form onSubmit={handleSaveResult}>
-                        <div style={{ marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '10px' }}>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Patient</p>
-                            <p style={{ fontWeight: 'bold' }}>{selectedOrder.patients?.first_name} {selectedOrder.patients?.last_name}</p>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px' }}>Test requested</p>
-                            <p style={{ fontWeight: 'bold' }}>{selectedOrder.lab_tests?.name}</p>
+                        <div style={{ marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>PATIENT</p>
+                                    <p style={{ fontWeight: 'bold', margin: 0 }}>{selectedOrder.patients?.first_name} {selectedOrder.patients?.last_name}</p>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>TEST TYPE</p>
+                                    <p style={{ fontWeight: 'bold', margin: 0 }}>{selectedOrder.lab_tests?.name}</p>
+                                </div>
+                            </div>
                         </div>
+
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label className="form-label">Observed Value</label>
+                                <input 
+                                    className="form-input" 
+                                    required 
+                                    value={resultForm.value}
+                                    onChange={(e) => setResultForm({...resultForm, value: e.target.value})}
+                                    placeholder="e.g. 14.5"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Unit</label>
+                                <input 
+                                    className="form-input" 
+                                    required 
+                                    value={resultForm.unit}
+                                    onChange={(e) => setResultForm({...resultForm, unit: e.target.value})}
+                                    placeholder="e.g. g/dL, mg/L"
+                                />
+                            </div>
+                        </div>
+
                         <div className="form-group">
-                            <label className="form-label">Test Results / Findings</label>
+                            <label className="form-label">Normality Flag</label>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {['LOW', 'NORMAL', 'HIGH', 'CRITICAL'].map(f => (
+                                    <button 
+                                        key={f} 
+                                        type="button"
+                                        onClick={() => setResultForm({...resultForm, flag: f})}
+                                        style={{ 
+                                            flex: 1, 
+                                            padding: '8px', 
+                                            borderRadius: '8px', 
+                                            fontSize: '0.75rem', 
+                                            fontWeight: 'bold',
+                                            border: '1px solid var(--border-light)',
+                                            background: resultForm.flag === f ? (f === 'NORMAL' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)') : 'rgba(255,255,255,0.02)',
+                                            color: resultForm.flag === f ? (f === 'NORMAL' ? 'var(--status-success)' : 'var(--status-danger)') : 'var(--text-muted)',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Clinical Observations</label>
                             <textarea 
                                 className="form-input" 
-                                required 
-                                rows={5}
-                                value={resultText}
-                                onChange={(e) => setResultText(e.target.value)}
-                                placeholder="Enter laboratory findings here..."
+                                rows={3}
+                                value={resultForm.notes}
+                                onChange={(e) => setResultForm({...resultForm, notes: e.target.value})}
+                                placeholder="Technician notes..."
                             />
                         </div>
-                        <div className="flex-end">
-                            <button type="button" className="btn btn-outline" onClick={() => setIsResultModalOpen(false)}>Cancel</button>
+
+                        <div className="flex-end" style={{ marginTop: '1.5rem' }}>
+                            <button type="button" className="btn btn-outline" onClick={() => setIsResultModalOpen(false)}>Discard</button>
                             <button type="submit" className="btn btn-primary" disabled={resultSubmitting}>
-                                {resultSubmitting ? 'Saving...' : 'Complete & Send Result'}
+                                {resultSubmitting ? 'Finalizing...' : 'Authorize & Send Result'}
                             </button>
                         </div>
                     </form>

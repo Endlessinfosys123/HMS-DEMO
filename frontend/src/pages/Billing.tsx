@@ -9,6 +9,14 @@ export const Billing = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [currentStep, setCurrentStep] = useState(1);
+
+    const BILLING_PRESETS = [
+        { name: 'General Consultation', price: 500 },
+        { name: 'Specialist Visit', price: 1500 },
+        { name: 'X-Ray / Diagnostic', price: 1200 },
+        { name: 'Pharmacy Dispense', price: 0 }
+    ];
 
     // Invoice Form State
     const [invoiceData, setInvoiceData] = useState({
@@ -59,6 +67,7 @@ export const Billing = () => {
 
         if (!error) {
             setIsModalOpen(false);
+            setCurrentStep(1);
             setItems([{ description: 'Consultation', amount: 0 }]);
             setInvoiceData({
                 patient_id: '',
@@ -101,91 +110,188 @@ export const Billing = () => {
 
             <Modal 
                 isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                title="Generate New Invoice"
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setCurrentStep(1);
+                }} 
+                title="Financial Transaction Generator"
                 size="lg"
             >
-                <form onSubmit={handleCreateInvoice}>
-                    <div className="grid-2">
-                        <div className="form-group">
-                            <label className="form-label">Patient</label>
-                            <select 
-                                className="form-input" 
-                                required 
-                                value={invoiceData.patient_id}
-                                onChange={(e) => setInvoiceData({...invoiceData, patient_id: e.target.value})}
-                                style={{ background: 'var(--bg-sidebar)' }}
-                            >
-                                <option value="">Select Patient</option>
-                                {patients.map(p => (
-                                    <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Due Date</label>
-                            <input 
-                                type="date" 
-                                className="form-input" 
-                                required
-                                value={invoiceData.due_date}
-                                onChange={(e) => setInvoiceData({...invoiceData, due_date: e.target.value})}
-                            />
-                        </div>
-                    </div>
-
-                    <div style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h4 style={{ margin: 0 }}>Invoice Items</h4>
-                            <button type="button" className="btn btn-outline" style={{ padding: '4px 12px', fontSize: '0.8rem' }} onClick={handleAddItem}>
-                                <Plus size={14} /> Add Item
-                            </button>
-                        </div>
-                        
-                        {items.map((item, index) => (
-                            <div key={index} className="grid-2" style={{ gridTemplateColumns: '1fr 150px 40px', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
-                                <input 
-                                    className="form-input" 
-                                    placeholder="Description (e.g. Paracetamol)" 
-                                    value={item.description}
-                                    onChange={(e) => {
-                                        const newItems = [...items];
-                                        newItems[index].description = e.target.value;
-                                        setItems(newItems);
-                                    }}
-                                />
-                                <input 
-                                    type="number" 
-                                    className="form-input" 
-                                    placeholder="Amount" 
-                                    value={item.amount}
-                                    onChange={(e) => {
-                                        const newItems = [...items];
-                                        newItems[index].amount = Number(e.target.value);
-                                        setItems(newItems);
-                                    }}
-                                />
-                                {items.length > 1 && (
-                                    <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--status-danger)', cursor: 'pointer' }} onClick={() => handleRemoveItem(index)}>
-                                        <Trash2 size={18} />
-                                    </button>
-                                )}
-                            </div>
+                <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+                        {[1, 2].map(s => (
+                            <div key={s} style={{ 
+                                height: '4px', 
+                                flex: 1, 
+                                borderRadius: '2px', 
+                                background: s <= currentStep ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                                transition: 'all 0.3s'
+                            }}></div>
                         ))}
+                    </div>
 
-                        <div style={{ textAlign: 'right', borderTop: '1px solid var(--border-light)', paddingTop: '12px', marginTop: '12px' }}>
-                            <span className="text-muted">Total Amount:</span>
-                            <span style={{ fontSize: '1.25rem', fontWeight: 'bold', marginLeft: '12px' }}>${totalAmount.toFixed(2)}</span>
+                    {currentStep === 1 && (
+                        <div className="animate-fade-in">
+                            <div className="grid-2">
+                                <div className="form-group">
+                                    <label className="form-label">Patient</label>
+                                    <select 
+                                        className="form-input" 
+                                        required 
+                                        value={invoiceData.patient_id}
+                                        onChange={(e) => setInvoiceData({...invoiceData, patient_id: e.target.value})}
+                                        style={{ background: 'var(--bg-sidebar)' }}
+                                    >
+                                        <option value="">Select Patient</option>
+                                        {patients.map(p => (
+                                            <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Payment Due Date</label>
+                                    <input 
+                                        type="date" 
+                                        className="form-input" 
+                                        required
+                                        value={invoiceData.due_date}
+                                        onChange={(e) => setInvoiceData({...invoiceData, due_date: e.target.value})}
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                    <h4 style={{ margin: 0 }}>Line Items</h4>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <select 
+                                            className="form-input" 
+                                            style={{ fontSize: '0.75rem', padding: '4px 12px', width: 'auto', background: 'var(--bg-sidebar)' }}
+                                            onChange={(e) => {
+                                                if (!e.target.value) return;
+                                                const preset = BILLING_PRESETS.find(p => p.name === e.target.value);
+                                                if (preset) setItems([...items, { description: preset.name, amount: preset.price }]);
+                                                e.target.value = "";
+                                            }}
+                                        >
+                                            <option value="">+ Add Preset</option>
+                                            {BILLING_PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+                                        </select>
+                                        <button type="button" className="btn btn-outline" style={{ padding: '4px 12px', fontSize: '0.8rem' }} onClick={handleAddItem}>
+                                            <Plus size={14} /> Custom
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: '8px' }}>
+                                    {items.map((item, index) => (
+                                        <div key={index} className="grid-2" style={{ gridTemplateColumns: '1fr 120px 40px', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
+                                            <input 
+                                                className="form-input" 
+                                                placeholder="Service description..." 
+                                                value={item.description}
+                                                onChange={(e) => {
+                                                    const newItems = [...items];
+                                                    newItems[index].description = e.target.value;
+                                                    setItems(newItems);
+                                                }}
+                                            />
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>₹</span>
+                                                <input 
+                                                    type="number" 
+                                                    className="form-input" 
+                                                    style={{ paddingLeft: '24px' }}
+                                                    placeholder="0.00" 
+                                                    value={item.amount}
+                                                    onChange={(e) => {
+                                                        const newItems = [...items];
+                                                        newItems[index].amount = Number(e.target.value);
+                                                        setItems(newItems);
+                                                    }}
+                                                />
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                style={{ background: 'transparent', border: 'none', color: 'var(--status-danger)', cursor: 'pointer', display: 'flex', justifyContent: 'center' }} 
+                                                onClick={() => handleRemoveItem(index)}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div style={{ textAlign: 'right', borderTop: '1px solid var(--border-light)', paddingTop: '16px', marginTop: '16px' }}>
+                                    <span className="text-secondary">Subtotal Preview:</span>
+                                    <span style={{ fontSize: '1.4rem', fontWeight: 'bold', marginLeft: '12px', color: 'var(--accent-primary)' }}>₹{totalAmount.toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex-end">
+                                <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                <button className="btn btn-primary" disabled={!invoiceData.patient_id || items.length === 0} onClick={() => setCurrentStep(2)}>
+                                    Review Invoice
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="flex-end">
-                        <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn btn-primary" disabled={submitting}>
-                            {submitting ? 'Creating...' : 'Generate Invoice'}
-                        </button>
-                    </div>
-                </form>
+                    {currentStep === 2 && (
+                        <div className="animate-fade-in">
+                            <h4 style={{ marginBottom: '1rem' }}>Final Summary & Authorization</h4>
+                            <div style={{ 
+                                padding: '24px', 
+                                borderRadius: '16px', 
+                                background: 'white', 
+                                color: '#000',
+                                boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                                marginBottom: '1.5rem',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                    <h3 style={{ margin: 0, color: '#333' }}>INVOICE</h3>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>Dated: {new Date().toLocaleDateString()}</p>
+                                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>Due: {new Date(invoiceData.due_date).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#888' }}>BILL TO:</p>
+                                    <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                        {patients.find(p => p.id === invoiceData.patient_id)?.first_name} {patients.find(p => p.id === invoiceData.patient_id)?.last_name}
+                                    </p>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {items.map((it, i) => (
+                                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                                            <span>{it.description}</span>
+                                            <span style={{ fontWeight: '600' }}>₹{it.amount.toFixed(2)}</span>
+                                        </div>
+                                    ))}
+                                    <div style={{ height: '1px', background: '#eee', margin: '12px 0' }}></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                        <span>TOTAL</span>
+                                        <span style={{ color: 'var(--accent-primary)' }}>₹{totalAmount.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                <div style={{ position: 'absolute', right: '-20px', bottom: '10px', opacity: 0.05, transform: 'rotate(-20deg)' }}>
+                                    <CheckCircle size={100} />
+                                </div>
+                            </div>
+
+                            <div className="flex-end" style={{ gap: '12px' }}>
+                                <button className="btn btn-outline" style={{ color: '#fff' }} onClick={() => setCurrentStep(1)}>Modify Items</button>
+                                <form onSubmit={handleCreateInvoice}>
+                                    <button type="submit" className="btn btn-primary" disabled={submitting}>
+                                        {submitting ? 'Authenticating...' : 'Authorize & Issue Invoice'}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </Modal>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
@@ -219,7 +325,7 @@ export const Billing = () => {
                                 <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                     <td style={{ padding: '16px', fontWeight: 'bold' }}>#{inv.id.slice(0, 6).toUpperCase()}</td>
                                     <td style={{ padding: '16px' }}>{inv.patients?.first_name} {inv.patients?.last_name}</td>
-                                    <td style={{ padding: '16px' }}>${Number(inv.amount).toFixed(2)}</td>
+                                    <td style={{ padding: '16px' }}>₹{Number(inv.amount).toFixed(2)}</td>
                                     <td style={{ padding: '16px' }}>
                                         <span
                                             style={{
@@ -264,11 +370,11 @@ export const Billing = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <span className="text-secondary">Total Paid</span>
-                                <span className="font-bold" style={{ color: 'var(--status-success)' }}>${totalRevenue.toFixed(2)}</span>
+                                <span className="font-bold" style={{ color: 'var(--status-success)' }}>₹{totalRevenue.toFixed(2)}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <span className="text-secondary">Outstanding</span>
-                                <span className="font-bold text-accent">${outstanding.toFixed(2)}</span>
+                                <span className="font-bold text-accent">₹{outstanding.toFixed(2)}</span>
                             </div>
                             <button className="btn btn-outline" style={{ width: '100%', marginTop: '8px' }}>Financial Report</button>
                         </div>

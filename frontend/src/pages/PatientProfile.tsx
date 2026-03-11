@@ -19,6 +19,7 @@ export const PatientProfile = () => {
     const [patient, setPatient] = useState<any>(null);
     const [consultations, setConsultations] = useState<any[]>([]);
     const [labOrders, setLabOrders] = useState<any[]>([]);
+    const [prescriptions, setPrescriptions] = useState<any[]>([]);
     const [invoices, setInvoices] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState('clinical');
     const [loading, setLoading] = useState(true);
@@ -29,15 +30,17 @@ export const PatientProfile = () => {
 
     const fetchPatientData = async () => {
         setLoading(true);
-        const [patientRes, consultRes, labRes, invoiceRes] = await Promise.all([
+        const [patientRes, consultRes, prescRes, labRes, invoiceRes] = await Promise.all([
             supabase.from('patients').select('*').eq('id', id).single(),
             supabase.from('consultations').select('*, profiles(first_name, last_name)').eq('patient_id', id).order('created_at', { ascending: false }),
+            supabase.from('prescriptions').select('*').eq('patient_id', id).order('created_at', { ascending: false }),
             supabase.from('lab_orders').select('*, lab_tests(name)').eq('patient_id', id).order('created_at', { ascending: false }),
             supabase.from('invoices').select('*').eq('patient_id', id).order('created_at', { ascending: false })
         ]);
 
         if (!patientRes.error) setPatient(patientRes.data);
         if (!consultRes.error) setConsultations(consultRes.data || []);
+        if (!prescRes.error) setPrescriptions(prescRes.data || []);
         if (!labRes.error) setLabOrders(labRes.data || []);
         if (!invoiceRes.error) setInvoices(invoiceRes.data || []);
         setLoading(false);
@@ -103,11 +106,35 @@ export const PatientProfile = () => {
                 <div>
                     <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', background: 'var(--bg-sidebar)', padding: '4px', borderRadius: '12px', width: 'fit-content' }}>
                         <TabButton active={activeTab === 'clinical'} onClick={() => setActiveTab('clinical')} icon={<Stethoscope size={16} />} label="Clinical History" />
+                        <TabButton active={activeTab === 'prescriptions'} onClick={() => setActiveTab('prescriptions')} icon={<ClipboardList size={16} />} label="Prescriptions" />
                         <TabButton active={activeTab === 'lab'} onClick={() => setActiveTab('lab')} icon={<Activity size={16} />} label="Lab Results" />
                         <TabButton active={activeTab === 'billing'} onClick={() => setActiveTab('billing')} icon={<CreditCard size={16} />} label="Billing" />
                     </div>
 
                     <div className="glass-card" style={{ minHeight: '600px' }}>
+                        {activeTab === 'prescriptions' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <h4>Active Medications</h4>
+                                    <button className="btn btn-outline" style={{ fontSize: '0.8rem' }}><Plus size={14} /> New Prescription</button>
+                                </div>
+                                {prescriptions.length > 0 ? prescriptions.map((p) => (
+                                    <div key={p.id} style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-light)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                            <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>{p.medication_name}</span>
+                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.duration}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem' }}>
+                                            <div><span className="text-muted">Dosage:</span> {p.dosage}</div>
+                                            <div><span className="text-muted">Freq:</span> {p.frequency}</div>
+                                        </div>
+                                        {p.instructions && <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Note: {p.instructions}</div>}
+                                    </div>
+                                )) : (
+                                    <EmptyState label="No prescription records found." />
+                                )}
+                            </div>
+                        )}
                         {activeTab === 'clinical' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -183,7 +210,7 @@ export const PatientProfile = () => {
                                             {invoices.map(inv => (
                                                 <tr key={inv.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
                                                     <td style={{ padding: '12px', fontSize: '0.85rem' }}>#{inv.id.slice(0,6)}</td>
-                                                    <td style={{ padding: '12px', fontWeight: '600' }}>${inv.amount}</td>
+                                                    <td style={{ padding: '12px', fontWeight: '600' }}>₹{inv.amount}</td>
                                                     <td style={{ padding: '12px' }}>
                                                         <span style={{ 
                                                             padding: '2px 6px', 

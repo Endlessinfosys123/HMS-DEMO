@@ -162,7 +162,7 @@ export const Pharmacy = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Unit Price ($)</label>
+                            <label className="form-label">Unit Price (₹)</label>
                             <input 
                                 type="number"
                                 step="0.01"
@@ -229,12 +229,12 @@ export const Pharmacy = () => {
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
                                 <span className="text-muted">Price x Qty:</span>
-                                <span>${posItem.price.toFixed(2)} x {sellQuantity}</span>
+                                <span>₹{posItem.price.toFixed(2)} x {sellQuantity}</span>
                             </div>
                             <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '12px 0', borderStyle: 'dashed', borderWidth: '1px 0 0 0' }}></div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.2rem' }}>
                                 <span>Total:</span>
-                                <span className="text-accent" style={{ color: 'var(--accent-primary)' }}>${(posItem.price * sellQuantity).toFixed(2)}</span>
+                                <span className="text-accent" style={{ color: 'var(--accent-primary)' }}>₹{(posItem.price * sellQuantity).toFixed(2)}</span>
                             </div>
                         </div>
                     )}
@@ -284,7 +284,7 @@ export const Pharmacy = () => {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px' }}>{item.category}</td>
-                                    <td style={{ padding: '16px' }}>${item.price.toFixed(2)}</td>
+                                    <td style={{ padding: '16px' }}>₹{item.price.toFixed(2)}</td>
                                     <td style={{ padding: '16px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontWeight: 'bold', color: item.stock_quantity < 20 ? 'var(--status-danger)' : 'var(--text-primary)' }}>

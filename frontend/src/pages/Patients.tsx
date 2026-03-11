@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, ExternalLink, ClipboardList, Stethoscope } from 'lucide-react';
+import { Search, Plus, ExternalLink, ClipboardList, Stethoscope, ArrowRight, ArrowLeft, CheckCircle, User, Phone, ShieldCheck, Droplets, Calendar as CalendarIcon } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,6 +14,7 @@ export const Patients = () => {
     const [isConsultModalOpen, setIsConsultModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
+    const [registrationStep, setRegistrationStep] = useState(1);
 
     const [formData, setFormData] = useState({
         first_name: '',
@@ -57,6 +58,7 @@ export const Patients = () => {
 
         if (!error) {
             setIsModalOpen(false);
+            setRegistrationStep(1);
             setFormData({
                 first_name: '',
                 last_name: '',
@@ -116,113 +118,244 @@ export const Patients = () => {
 
             <Modal 
                 isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                title="Register New Patient"
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setRegistrationStep(1);
+                }} 
+                title="Hospital Patient Admission"
                 size="lg"
             >
-                <form onSubmit={handleRegister}>
-                    <div className="grid-2">
-                        <div className="form-group">
-                            <label className="form-label">First Name</label>
-                            <input 
-                                type="text" 
-                                className="form-input" 
-                                required 
-                                value={formData.first_name}
-                                onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                                placeholder="John"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Last Name</label>
-                            <input 
-                                type="text" 
-                                className="form-input" 
-                                required 
-                                value={formData.last_name}
-                                onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                                placeholder="Doe"
-                            />
-                        </div>
+                <div>
+                    {/* Progress Bar */}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '2.5rem' }}>
+                        {['Identity', 'Contact', 'Review'].map((label, idx) => (
+                            <div key={label} style={{ flex: 1 }}>
+                                <div style={{ 
+                                    height: '4px', 
+                                    background: registrationStep > idx ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                                    borderRadius: '2px',
+                                    marginBottom: '8px',
+                                    transition: 'all 0.4s'
+                                }} />
+                                <span style={{ 
+                                    fontSize: '0.7rem', 
+                                    fontWeight: 'bold', 
+                                    color: registrationStep > idx ? 'var(--accent-primary)' : 'var(--text-muted)',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                }}>{label}</span>
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="grid-2">
-                        <div className="form-group">
-                            <label className="form-label">Email Address</label>
-                            <input 
-                                type="email" 
-                                className="form-input" 
-                                value={formData.email}
-                                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                placeholder="john.doe@example.com"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Phone Number</label>
-                            <input 
-                                type="tel" 
-                                className="form-input" 
-                                required 
-                                value={formData.phone}
-                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                placeholder="+1 (555) 000-0000"
-                            />
-                        </div>
-                    </div>
+                    <form onSubmit={handleRegister}>
+                        {registrationStep === 1 && (
+                            <div className="animate-slide-up">
+                                <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <User size={20} className="text-accent" /> Personal Profile
+                                </h3>
+                                <div className="grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">First Name</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-input" 
+                                            required 
+                                            value={formData.first_name}
+                                            onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                                            placeholder="John"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Last Name</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-input" 
+                                            required 
+                                            value={formData.last_name}
+                                            onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                                            placeholder="Doe"
+                                        />
+                                    </div>
+                                </div>
 
-                    <div className="grid-2">
-                        <div className="form-group">
-                            <label className="form-label">Gender</label>
-                            <select 
-                                className="form-input"
-                                value={formData.gender}
-                                onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                                style={{ background: 'var(--bg-sidebar)' }}
-                            >
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Date of Birth</label>
-                            <input 
-                                type="date" 
-                                className="form-input" 
-                                value={formData.date_of_birth}
-                                onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})}
-                            />
-                        </div>
-                    </div>
+                                <div className="grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">Gender</label>
+                                        <select 
+                                            className="form-input"
+                                            value={formData.gender}
+                                            onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                                            style={{ background: 'var(--bg-sidebar)' }}
+                                        >
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Date of Birth</label>
+                                        <input 
+                                            type="date" 
+                                            className="form-input" 
+                                            required
+                                            value={formData.date_of_birth}
+                                            onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Address</label>
-                        <textarea 
-                            className="form-input"
-                            rows={3}
-                            value={formData.address}
-                            onChange={(e) => setFormData({...formData, address: e.target.value})}
-                            placeholder="Residential address..."
-                        />
-                    </div>
+                                <div className="flex-end" style={{ marginTop: '2.5rem' }}>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-primary" 
+                                        onClick={() => setRegistrationStep(2)}
+                                        disabled={!formData.first_name || !formData.last_name || !formData.date_of_birth}
+                                    >
+                                        Next Component <ArrowRight size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
-                    <div className="flex-end" style={{ marginTop: '1rem' }}>
-                        <button 
-                            type="button" 
-                            className="btn btn-outline" 
-                            onClick={() => setIsModalOpen(false)}
-                        >
-                            Cancel
-                        </button>
-                        <button 
-                            type="submit" 
-                            className="btn btn-primary"
-                            disabled={submitting}
-                        >
-                            {submitting ? 'Registering...' : 'Complete Registration'}
-                        </button>
-                    </div>
-                </form>
+                        {registrationStep === 2 && (
+                            <div className="animate-slide-up">
+                                <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Phone size={20} className="text-accent" /> Contact & Clinical Data
+                                </h3>
+                                <div className="grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">Email Address</label>
+                                        <input 
+                                            type="email" 
+                                            className="form-input" 
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                            placeholder="john.doe@example.com"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Phone Number</label>
+                                        <input 
+                                            type="tel" 
+                                            className="form-input" 
+                                            required 
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Blood Group</label>
+                                    <select 
+                                        className="form-input"
+                                        value={formData.blood_group}
+                                        onChange={(e) => setFormData({...formData, blood_group: e.target.value})}
+                                        style={{ background: 'var(--bg-sidebar)' }}
+                                    >
+                                        <option value="">Select Group</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Address</label>
+                                    <textarea 
+                                        className="form-input"
+                                        rows={3}
+                                        value={formData.address}
+                                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                        placeholder="Full residential address..."
+                                    />
+                                </div>
+
+                                <div className="flex-end" style={{ marginTop: '2.5rem', gap: '12px' }}>
+                                    <button type="button" className="btn btn-outline" onClick={() => setRegistrationStep(1)}>
+                                        <ArrowLeft size={18} /> Back
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-primary" 
+                                        onClick={() => setRegistrationStep(3)}
+                                        disabled={!formData.phone}
+                                    >
+                                        Review Profile <ArrowRight size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {registrationStep === 3 && (
+                            <div className="animate-slide-up">
+                                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                                    <div style={{ 
+                                        width: '64px', 
+                                        height: '64px', 
+                                        borderRadius: '50%', 
+                                        background: 'rgba(59, 130, 246, 0.1)', 
+                                        color: 'var(--accent-primary)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        margin: '0 auto 1rem'
+                                    }}>
+                                        <ShieldCheck size={32} />
+                                    </div>
+                                    <h3 style={{ margin: 0 }}>Review Registration Summary</h3>
+                                    <p className="text-muted">Please confirm the details before admission.</p>
+                                </div>
+
+                                <div className="glass-card" style={{ padding: '20px', marginBottom: '2rem', background: 'rgba(255,255,255,0.02)' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><User size={12} /> Full Name</p>
+                                            <p style={{ fontWeight: '600' }}>{formData.first_name} {formData.last_name}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><CalendarIcon size={12} /> Age / Gender</p>
+                                            <p style={{ fontWeight: '600' }}>{formData.gender} ({new Date().getFullYear() - new Date(formData.date_of_birth).getFullYear()} yrs)</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={12} /> Contact</p>
+                                            <p style={{ fontWeight: '600' }}>{formData.phone}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Droplets size={12} /> Blood Group</p>
+                                            <p style={{ fontWeight: '600', color: 'var(--accent-primary)' }}>{formData.blood_group || 'Not Specified'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex-end" style={{ gap: '12px' }}>
+                                    <button type="button" className="btn btn-outline" onClick={() => setRegistrationStep(2)}>
+                                        <ArrowLeft size={18} /> Edit Info
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        className="btn btn-primary"
+                                        disabled={submitting}
+                                        style={{ background: 'var(--status-success)', borderColor: 'var(--status-success)' }}
+                                    >
+                                        {submitting ? 'Registering...' : (
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                Complete Admission <CheckCircle size={18} />
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </form>
+                </div>
             </Modal>
 
             {/* Consultation / EMR Modal */}

@@ -8,9 +8,8 @@ export const Appointments = () => {
     const [patients, setPatients] = useState<any[]>([]);
     const [doctors, setDoctors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-    
+    const [bookingStep, setBookingStep] = useState(1);
+    const [currentSpecialization, setCurrentSpecialization] = useState('');
     const [formData, setFormData] = useState({
         patient_id: '',
         doctor_id: '',
@@ -18,6 +17,8 @@ export const Appointments = () => {
         reason: '',
         status: 'SCHEDULED'
     });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         fetchInitialData();
@@ -47,6 +48,7 @@ export const Appointments = () => {
 
         if (!error) {
             setIsModalOpen(false);
+            setBookingStep(1);
             setFormData({
                 patient_id: '',
                 doctor_id: '',
@@ -87,72 +89,152 @@ export const Appointments = () => {
 
             <Modal 
                 isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                title="Schedule New Appointment"
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setBookingStep(1);
+                }} 
+                title="Book an Appointment"
                 size="md"
             >
-                <form onSubmit={handleSchedule}>
-                    <div className="form-group">
-                        <label className="form-label">Patient</label>
-                        <select 
-                            className="form-input" 
-                            required 
-                            value={formData.patient_id}
-                            onChange={(e) => setFormData({...formData, patient_id: e.target.value})}
-                            style={{ background: 'var(--bg-sidebar)' }}
-                        >
-                            <option value="">Select Patient</option>
-                            {patients.map(p => (
-                                <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
-                            ))}
-                        </select>
+                <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+                        {[1, 2, 3].map(s => (
+                            <div key={s} style={{ 
+                                height: '4px', 
+                                flex: 1, 
+                                borderRadius: '2px', 
+                                background: s <= bookingStep ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                                transition: 'all 0.3s'
+                            }}></div>
+                        ))}
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Consulting Doctor</label>
-                        <select 
-                            className="form-input" 
-                            required 
-                            value={formData.doctor_id}
-                            onChange={(e) => setFormData({...formData, doctor_id: e.target.value})}
-                            style={{ background: 'var(--bg-sidebar)' }}
-                        >
-                            <option value="">Select Doctor</option>
-                            {doctors.map(d => (
-                                <option key={d.id} value={d.id}>Dr. {d.first_name} {d.last_name}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {bookingStep === 1 && (
+                        <div className="animate-fade-in">
+                            <h4 style={{ marginBottom: '1rem' }}>Step 1: Select Professional</h4>
+                            <div className="form-group">
+                                <label className="form-label">Specialization</label>
+                                <select 
+                                    className="form-input" 
+                                    style={{ background: 'var(--bg-sidebar)' }}
+                                    value={currentSpecialization}
+                                    onChange={(e) => setCurrentSpecialization(e.target.value)}
+                                >
+                                    <option value="">All Services</option>
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="Neurology">Neurology</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="Surgery">General Surgery</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Doctor</label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {doctors
+                                        .filter(d => !currentSpecialization || d.specialization === currentSpecialization)
+                                        .map(d => (
+                                        <div 
+                                            key={d.id} 
+                                            onClick={() => setFormData({...formData, doctor_id: d.id})}
+                                            style={{ 
+                                                padding: '12px', 
+                                                borderRadius: '10px', 
+                                                background: formData.doctor_id === d.id ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,255,255,0.02)',
+                                                border: `1px solid ${formData.doctor_id === d.id ? 'var(--accent-primary)' : 'var(--border-light)'}`,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>Dr. {d.first_name} {d.last_name}</span>
+                                            {formData.doctor_id === d.id && <Check size={16} className="text-accent" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex-end" style={{ marginTop: '2rem' }}>
+                                <button className="btn btn-primary" disabled={!formData.doctor_id} onClick={() => setBookingStep(2)}>
+                                    Next: Choose Time
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
-                    <div className="form-group">
-                        <label className="form-label">Date & Time</label>
-                        <input 
-                            type="datetime-local" 
-                            className="form-input" 
-                            required 
-                            value={formData.appointment_date}
-                            onChange={(e) => setFormData({...formData, appointment_date: e.target.value})}
-                        />
-                    </div>
+                    {bookingStep === 2 && (
+                        <div className="animate-fade-in">
+                            <h4 style={{ marginBottom: '1rem' }}>Step 2: Schedule & Patient</h4>
+                            <div className="form-group">
+                                <label className="form-label">Patient</label>
+                                <select 
+                                    className="form-input" 
+                                    required 
+                                    value={formData.patient_id}
+                                    onChange={(e) => setFormData({...formData, patient_id: e.target.value})}
+                                    style={{ background: 'var(--bg-sidebar)' }}
+                                >
+                                    <option value="">Select Patient</option>
+                                    {patients.map(p => (
+                                        <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Appointment Time</label>
+                                <input 
+                                    type="datetime-local" 
+                                    className="form-input" 
+                                    required 
+                                    value={formData.appointment_date}
+                                    onChange={(e) => setFormData({...formData, appointment_date: e.target.value})}
+                                />
+                            </div>
+                            <div className="flex-end" style={{ marginTop: '2rem', gap: '12px' }}>
+                                <button className="btn btn-outline" onClick={() => setBookingStep(1)}>Back</button>
+                                <button className="btn btn-primary" disabled={!formData.patient_id || !formData.appointment_date} onClick={() => setBookingStep(3)}>
+                                    Next: Review
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
-                    <div className="form-group">
-                        <label className="form-label">Reason for Visit</label>
-                        <textarea 
-                            className="form-input" 
-                            rows={3}
-                            value={formData.reason}
-                            onChange={(e) => setFormData({...formData, reason: e.target.value})}
-                            placeholder="Symptoms or check-up..."
-                        />
-                    </div>
-
-                    <div className="flex-end" style={{ marginTop: '1rem' }}>
-                        <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn btn-primary" disabled={submitting}>
-                            {submitting ? 'Scheduling...' : 'Confirm Appointment'}
-                        </button>
-                    </div>
-                </form>
+                    {bookingStep === 3 && (
+                        <div className="animate-fade-in">
+                            <h4 style={{ marginBottom: '1rem' }}>Step 3: Confirm Details</h4>
+                            <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid var(--border-light)', marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <div>
+                                        <span className="text-muted" style={{ fontSize: '0.8rem' }}>Professional</span>
+                                        <p style={{ margin: 0, fontWeight: 'bold' }}>Dr. {doctors.find(d => d.id === formData.doctor_id)?.first_name} {doctors.find(d => d.id === formData.doctor_id)?.last_name}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted" style={{ fontSize: '0.8rem' }}>Patient</span>
+                                        <p style={{ margin: 0, fontWeight: 'bold' }}>{patients.find(p => p.id === formData.patient_id)?.first_name} {patients.find(p => p.id === formData.patient_id)?.last_name}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted" style={{ fontSize: '0.8rem' }}>Time</span>
+                                        <p style={{ margin: 0, fontWeight: 'bold' }}>{new Date(formData.appointment_date).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Reason for Visit</label>
+                                <input 
+                                    className="form-input" 
+                                    value={formData.reason}
+                                    onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                                    placeholder="Brief description..."
+                                />
+                            </div>
+                            <div className="flex-end" style={{ marginTop: '2rem', gap: '12px' }}>
+                                <button className="btn btn-outline" onClick={() => setBookingStep(2)}>Back</button>
+                                <button className="btn btn-primary" disabled={submitting} onClick={handleSchedule}>
+                                    {submitting ? 'Confirming...' : 'Book Appointment'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </Modal>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
