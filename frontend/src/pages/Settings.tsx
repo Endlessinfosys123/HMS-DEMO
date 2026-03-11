@@ -8,7 +8,7 @@ import {
     Database
 } from 'lucide-react';
 
-export const SettingsPage = () => {
+export const Settings = () => {
 
     const sections = [
         {
