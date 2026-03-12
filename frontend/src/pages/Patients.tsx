@@ -15,6 +15,7 @@ export const Patients = () => {
     const [submitting, setSubmitting] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [registrationStep, setRegistrationStep] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [formData, setFormData] = useState({
         first_name: '',
@@ -100,6 +101,13 @@ export const Patients = () => {
         }
         setSubmitting(false);
     };
+
+    const filteredPatients = patients.filter(p => 
+        p.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.phone.includes(searchQuery) ||
+        p.id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="animate-fade-in">
@@ -429,6 +437,8 @@ export const Patients = () => {
                             type="text"
                             placeholder="Search by ID, Name or Phone..."
                             style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                     <button className="btn btn-outline" style={{ fontSize: '0.85rem' }}>Filter</button>
@@ -449,7 +459,7 @@ export const Patients = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {patients.length > 0 ? patients.map((p) => (
+                            {filteredPatients.length > 0 ? filteredPatients.map((p) => (
                                 <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }} className="patient-row">
                                     <td style={{ padding: '16px' }}>
                                         <div style={{ fontWeight: '600' }}>{p.first_name} {p.last_name}</div>

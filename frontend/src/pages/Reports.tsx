@@ -11,24 +11,29 @@ import {
     ChevronRight,
     CreditCard
 } from 'lucide-react';
+import { Modal } from '../components/Modal';
 
 export const Reports = () => {
     const [stats, setStats] = useState({
         totalRevenue: 0,
         patientGrowth: 0,
         bedOccupancy: 0,
-        labTests: 0
+        labTests: 0,
+        genderDist: { male: 0, female: 0, other: 0 }
     });
+    const [selectedReport, setSelectedReport] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchReportData();
     }, []);
 
     const fetchReportData = async () => {
-        // Mock data fetching for reports summary
+        setLoading(true);
         const [revenueRes, patientsRes, bedsRes, labsRes] = await Promise.all([
             supabase.from('invoices').select('amount').eq('status', 'PAID'),
-            supabase.from('patients').select('id', { count: 'exact' }),
+            supabase.from('patients').select('id, gender'),
             supabase.from('beds').select('id, is_occupied'),
             supabase.from('lab_orders').select('id', { count: 'exact' })
         ]);
@@ -36,13 +41,24 @@ export const Reports = () => {
         const rev = revenueRes.data?.reduce((sum, i) => sum + Number(i.amount), 0) || 0;
         const totalBeds = bedsRes.data?.length || 0;
         const occ = bedsRes.data?.filter(b => b.is_occupied).length || 0;
+        
+        const patients = patientsRes.data || [];
+        const genderDist = patients.reduce((acc: any, p: any) => {
+            const g = (p.gender || 'Other').toLowerCase();
+            if (g === 'male') acc.male++;
+            else if (g === 'female') acc.female++;
+            else acc.other++;
+            return acc;
+        }, { male: 0, female: 0, other: 0 });
 
         setStats({
             totalRevenue: rev,
-            patientGrowth: patientsRes.count || 0,
+            patientGrowth: patients.length,
             bedOccupancy: totalBeds > 0 ? Math.round((occ / totalBeds) * 100) : 0,
-            labTests: labsRes.count || 0
+            labTests: labsRes.count || 0,
+            genderDist
         });
+        setLoading(false);
     };
 
     return (
@@ -54,7 +70,7 @@ export const Reports = () => {
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     <button className="btn btn-outline"><Calendar size={18} /> Last 30 Days</button>
-                    <button className="btn btn-primary"><Download size={18} /> Export Data</button>
+                    <button className="btn btn-primary" disabled={loading} onClick={() => fetchReportData()}><Download size={18} /> {loading ? 'Syncing...' : 'Export Data'}</button>
                 </div>
             </div>
 
@@ -70,12 +86,50 @@ export const Reports = () => {
                 <div className="glass-card">
                     <h4 className="mb-6">Generate Detailed Report</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <ReportOption icon={<CreditCard size={18} />} title="Revenue & Tax Report" desc="Detailed breakdown of all income, grouped by department and date range." />
-                        <ReportOption icon={<Users size={18} />} title="Patient Demographic Analysis" desc="Understand your patient base by age, gender, and geographical region." />
-                        <ReportOption icon={<Activity size={18} />} title="Clinical Outcome Summary" desc="Success rates of treatments and patient discharge statuses." />
-                        <ReportOption icon={<FileText size={18} />} title="Inventory Asset Review" desc="Current stock valuation and medication expiration alerts." />
+                        <ReportOption 
+                            icon={<CreditCard size={18} />} 
+                            title="Revenue & Tax Report" 
+                            desc="Detailed breakdown of all income." 
+                            onClick={() => { setSelectedReport('REVENUE'); setIsModalOpen(true); }}
+                        />
+                        <ReportOption 
+                            icon={<Users size={18} />} 
+                            title="Patient Demographic Analysis" 
+                            desc="Understand your patient base by gender." 
+                            onClick={() => { setSelectedReport('DEMO'); setIsModalOpen(true); }}
+                        />
+                        <ReportOption icon={<Activity size={18} />} title="Clinical Outcome Summary" desc="Success rates of treatments." />
+                        <ReportOption icon={<FileText size={18} />} title="Inventory Asset Review" desc="Current stock valuation." />
                     </div>
                 </div>
+
+                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={selectedReport === 'REVENUE' ? 'Revenue Report' : 'Demographic Analysis'}>
+                    {selectedReport === 'REVENUE' ? (
+                        <div className="animate-fade-in">
+                            <h3 style={{ marginBottom: '1rem', color: 'var(--status-success)' }}>Total Realized: ₹{stats.totalRevenue.toLocaleString()}</h3>
+                            <p className="text-muted">This report considers all invoices marked as PAID.</p>
+                            <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                    <span>Grosse Income</span>
+                                    <span>₹{stats.totalRevenue.toLocaleString()}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--status-danger)' }}>
+                                    <span>Estimated Tax (18%)</span>
+                                    <span>₹{(stats.totalRevenue * 0.18).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="animate-fade-in">
+                            <h4 style={{ marginBottom: '1.5rem' }}>Gender Distribution</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <GenderStat label="Male" count={stats.genderDist.male} total={stats.patientGrowth} color="var(--accent-primary)" />
+                                <GenderStat label="Female" count={stats.genderDist.female} total={stats.patientGrowth} color="#ec4899" />
+                                <GenderStat label="Other" count={stats.genderDist.other} total={stats.patientGrowth} color="var(--text-muted)" />
+                            </div>
+                        </div>
+                    )}
+                </Modal>
 
                 {/* Searchable Records List */}
                 <div className="glass-card">
@@ -128,8 +182,23 @@ const ReportStatCard = ({ title, value, icon, change, color }: any) => (
     </div>
 );
 
-const ReportOption = ({ icon, title, desc }: any) => (
-    <div className="report-option" style={{ 
+const GenderStat = ({ label, count, total, color }: any) => {
+    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
+                <span>{label}</span>
+                <span style={{ fontWeight: 'bold' }}>{count} ({pct}%)</span>
+            </div>
+            <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: color }}></div>
+            </div>
+        </div>
+    );
+};
+
+const ReportOption = ({ icon, title, desc, onClick }: any) => (
+    <div className="report-option" onClick={onClick} style={{ 
         display: 'flex', 
         alignItems: 'center', 
         gap: '16px', 

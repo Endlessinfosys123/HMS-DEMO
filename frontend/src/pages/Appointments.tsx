@@ -19,6 +19,7 @@ export const Appointments = () => {
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetchInitialData();
@@ -72,6 +73,13 @@ export const Appointments = () => {
         if (!error) fetchInitialData();
     };
 
+    const filteredAppointments = appointments.filter(apt => 
+        apt.patients?.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        apt.patients?.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        apt.profiles?.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        apt.profiles?.last_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="animate-fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -79,12 +87,24 @@ export const Appointments = () => {
                     <h1 className="text-3xl">Appointment Schedule</h1>
                     <p className="text-muted">Manage patient visits and doctor availability.</p>
                 </div>
-                <button 
-                    className="btn btn-primary"
-                    onClick={() => setIsModalOpen(true)}
-                >
-                    <Plus size={18} /> Schedule Appointment
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '0 16px', marginRight: '12px' }}>
+                        <User size={18} className="text-muted" style={{ marginRight: '8px' }} />
+                        <input
+                            type="text"
+                            placeholder="Search by Patient or Doctor..."
+                            style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '250px', height: '40px' }}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <button 
+                        className="btn btn-primary"
+                        onClick={() => setIsModalOpen(true)}
+                    >
+                        <Plus size={18} /> Schedule Appointment
+                    </button>
+                </div>
             </div>
 
             <Modal 
@@ -240,7 +260,7 @@ export const Appointments = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
                 {loading ? (
                     <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center' }}>Loading schedule...</div>
-                ) : appointments.length > 0 ? appointments.map((apt) => (
+                ) : filteredAppointments.length > 0 ? filteredAppointments.map((apt) => (
                     <div key={apt.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>

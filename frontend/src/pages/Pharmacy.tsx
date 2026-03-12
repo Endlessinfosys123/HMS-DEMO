@@ -5,12 +5,15 @@ import { Modal } from '../components/Modal';
 
 export const Pharmacy = () => {
     const [inventory, setInventory] = useState<any[]>([]);
+    const [patients, setPatients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPOSOpen, setIsPOSOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [posItem, setPosItem] = useState<any>(null);
     const [sellQuantity, setSellQuantity] = useState(1);
+    const [selectedPatientId, setSelectedPatientId] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [formData, setFormData] = useState({
         item_name: '',
@@ -26,12 +29,13 @@ export const Pharmacy = () => {
 
     const fetchInventory = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('inventory')
-            .select('*')
-            .order('item_name', { ascending: true });
+        const [invRes, patientRes] = await Promise.all([
+            supabase.from('inventory').select('*').order('item_name', { ascending: true }),
+            supabase.from('patients').select('id, first_name, last_name')
+        ]);
 
-        if (!error) setInventory(data || []);
+        if (!invRes.error) setInventory(invRes.data || []);
+        if (!patientRes.error) setPatients(patientRes.data || []);
         setLoading(false);
     };
 
@@ -61,24 +65,40 @@ export const Pharmacy = () => {
 
     const handleSell = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!posItem || sellQuantity > posItem.stock_quantity) {
-            alert('Insufficient stock!');
+        if (!posItem || sellQuantity > posItem.stock_quantity || !selectedPatientId) {
+            alert('Selection incomplete or insufficient stock!');
             return;
         }
         setSubmitting(true);
         
-        const { error } = await supabase
-            .from('inventory')
-            .update({ stock_quantity: posItem.stock_quantity - sellQuantity })
-            .eq('id', posItem.id);
+        try {
+            // 1. Update Inventory
+            const { error: invError } = await supabase
+                .from('inventory')
+                .update({ stock_quantity: posItem.stock_quantity - sellQuantity })
+                .eq('id', posItem.id);
 
-        if (!error) {
+            if (invError) throw invError;
+
+            // 2. Create Invoice
+            const { error: invoiceError } = await supabase
+                .from('invoices')
+                .insert([{
+                    patient_id: selectedPatientId,
+                    amount: posItem.price * sellQuantity,
+                    status: 'PAID',
+                    due_date: new Date().toISOString().split('T')[0]
+                }]);
+
+            if (invoiceError) throw invoiceError;
+
             setIsPOSOpen(false);
             setSellQuantity(1);
+            setSelectedPatientId('');
             fetchInventory();
-            alert(`Sold ${sellQuantity} x ${posItem.item_name}`);
-        } else {
-            alert('Error during sale: ' + error.message);
+            alert(`Sale authorized! Invoice created for ${sellQuantity} x ${posItem.item_name}`);
+        } catch (error: any) {
+            alert('Error during transaction: ' + error.message);
         }
         setSubmitting(false);
     };
@@ -210,6 +230,22 @@ export const Pharmacy = () => {
                     </div>
 
                     <div className="form-group">
+                        <label className="form-label">Patient</label>
+                        <select 
+                            className="form-input" 
+                            required
+                            style={{ background: 'var(--bg-sidebar)' }}
+                            value={selectedPatientId}
+                            onChange={(e) => setSelectedPatientId(e.target.value)}
+                        >
+                            <option value="">Select Patient</option>
+                            {patients.map(p => (
+                                <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="form-group">
                         <label className="form-label">Quantity</label>
                         <input 
                             type="number" 
@@ -256,6 +292,8 @@ export const Pharmacy = () => {
                             type="text"
                             placeholder="Search medications..."
                             style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                 </div>
@@ -275,7 +313,8 @@ export const Pharmacy = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {inventory.length > 0 ? inventory.map((item) => (
+                            {inventory.filter(i => i.item_name.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? 
+                                inventory.filter(i => i.item_name.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => (
                                 <tr key={item.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                     <td style={{ padding: '16px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

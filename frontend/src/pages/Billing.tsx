@@ -10,6 +10,7 @@ export const Billing = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const BILLING_PRESETS = [
         { name: 'General Consultation', price: 500 },
@@ -92,6 +93,12 @@ export const Billing = () => {
 
     const totalRevenue = invoices.reduce((acc, inv) => acc + (inv.status === 'PAID' ? Number(inv.amount) : 0), 0);
     const outstanding = invoices.reduce((acc, inv) => acc + (inv.status !== 'PAID' ? Number(inv.amount) : 0), 0);
+
+    const filteredInvoices = invoices.filter(inv => 
+        inv.patients?.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        inv.patients?.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        inv.id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="animate-fade-in">
@@ -303,6 +310,8 @@ export const Billing = () => {
                                 type="text"
                                 placeholder="Search invoices..."
                                 style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
                     </div>
@@ -321,7 +330,7 @@ export const Billing = () => {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan={6} style={{ padding: '32px', textAlign: 'center' }}>Loading financials...</td></tr>
-                            ) : invoices.length > 0 ? invoices.map((inv) => (
+                            ) : filteredInvoices.length > 0 ? filteredInvoices.map((inv) => (
                                 <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                     <td style={{ padding: '16px', fontWeight: 'bold' }}>#{inv.id.slice(0, 6).toUpperCase()}</td>
                                     <td style={{ padding: '16px' }}>{inv.patients?.first_name} {inv.patients?.last_name}</td>

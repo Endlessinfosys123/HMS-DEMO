@@ -8,6 +8,7 @@ export const Lab = () => {
     const [patients, setPatients] = useState<any[]>([]);
     const [tests, setTests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
     
     // Order Modal State
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -77,6 +78,13 @@ export const Lab = () => {
         }
         setResultSubmitting(false);
     };
+
+    const filteredOrders = orders.filter(o => 
+        o.patients?.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        o.patients?.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        o.lab_tests?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        o.id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="animate-fade-in">
@@ -230,6 +238,8 @@ export const Lab = () => {
                             type="text"
                             placeholder="Search by Patient or Test..."
                             style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%' }}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                 </div>
@@ -249,7 +259,7 @@ export const Lab = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {orders.length > 0 ? orders.map((order) => (
+                            {filteredOrders.length > 0 ? filteredOrders.map((order) => (
                                 <tr key={order.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                     <td style={{ padding: '16px', fontWeight: '600' }}>#{order.id.slice(0, 8).toUpperCase()}</td>
                                     <td style={{ padding: '16px' }}>{order.patients?.first_name} {order.patients?.last_name}</td>
