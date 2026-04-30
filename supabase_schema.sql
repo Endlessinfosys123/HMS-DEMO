@@ -226,7 +226,12 @@ BEGIN
       THEN CAST(new.raw_user_meta_data->>'clinic_id' AS UUID)
       ELSE NULL
     END
-  );
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    first_name = EXCLUDED.first_name,
+    last_name = EXCLUDED.last_name,
+    clinic_id = EXCLUDED.clinic_id;
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
