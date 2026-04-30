@@ -221,7 +221,11 @@ BEGIN
     new.email, 
     COALESCE(new.raw_user_meta_data->>'first_name', ''), 
     COALESCE(new.raw_user_meta_data->>'last_name', ''),
-    CAST(new.raw_user_meta_data->>'clinic_id' AS UUID)
+    CASE 
+      WHEN new.raw_user_meta_data->>'clinic_id' IS NOT NULL AND new.raw_user_meta_data->>'clinic_id' <> ''
+      THEN CAST(new.raw_user_meta_data->>'clinic_id' AS UUID)
+      ELSE NULL
+    END
   );
   RETURN new;
 END;
