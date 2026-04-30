@@ -12,8 +12,6 @@
  *    - Use the code below to trigger a Stripe Checkout Session.
  */
 
-import { supabase } from './supabase';
-
 export const createCheckoutSession = async (clinicId: string, tier: 'BASIC' | 'PRO') => {
     // This is a placeholder for a call to a Supabase Edge Function 
     // that creates a Stripe Checkout session.

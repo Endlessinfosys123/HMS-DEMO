@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
-import { clinicalTemplates, Specialty } from '../data/templates';
+import { clinicalTemplates, type Specialty } from '../data/templates';
 import { supabase } from '../lib/supabase';
-import { FileText, FlaskConical, Pill, Save } from 'lucide-react';
+import { FlaskConical, Pill, Save } from 'lucide-react';
 
 interface Props {
     isOpen: boolean;

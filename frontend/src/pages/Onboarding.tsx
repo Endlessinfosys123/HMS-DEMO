@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Building2, User, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Building2, User, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export const Onboarding = () => {
-    const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -45,7 +44,7 @@ export const Onboarding = () => {
             if (clinicError) throw clinicError;
 
             // 2. Sign up Admin User with clinic_id in metadata
-            const { data: authData, error: authError } = await supabase.auth.signUp({
+            const { error: authError } = await supabase.auth.signUp({
                 email: formData.adminEmail,
                 password: formData.adminPassword,
                 options: {

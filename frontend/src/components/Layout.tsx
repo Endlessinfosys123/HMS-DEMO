@@ -18,7 +18,6 @@ import {
     Sparkles,
     X,
     Stethoscope,
-    ShieldCheck,
     Globe,
     Zap
 } from 'lucide-react';

@@ -12,15 +12,13 @@ export const SuperAdminDashboard = () => {
         totalRevenue: 0,
         pendingApprovals: 0
     });
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        fetchClinics();
-    }, []);
-
-    const fetchClinics = async () => {
-        setIsLoading(true);
-        const { data, error } = await supabase
+ 
+     useEffect(() => {
+         fetchClinics();
+     }, []);
+ 
+     const fetchClinics = async () => {
+         const { data, error } = await supabase
             .from('clinics')
             .select('*')
             .order('created_at', { ascending: false });
@@ -32,10 +30,9 @@ export const SuperAdminDashboard = () => {
                 activeSubscriptions: data.filter(c => c.subscription_status === 'ACTIVE').length,
                 totalRevenue: data.reduce((acc, c) => acc + (c.subscription_tier === 'PRO' ? 99 : c.subscription_tier === 'BASIC' ? 49 : 0), 0),
                 pendingApprovals: data.filter(c => c.subscription_status === 'PENDING').length
-            });
-        }
-        setIsLoading(false);
-    };
+             });
+         }
+     };
 
     if (profile?.roles?.name !== 'SUPER_ADMIN') {
         return (
