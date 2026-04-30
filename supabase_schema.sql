@@ -1,7 +1,7 @@
 -- Supabase Schema for HealthCore HMS
 
--- 0. Clean Slate (Optional: Uncomment if you want to wipe existing data)
--- DROP TABLE IF EXISTS payments, invoices, lab_orders, lab_tests, beds, wards, inventory, prescriptions, consultations, appointments, patients, profiles, roles, clinics CASCADE;
+-- 0. Clean Slate (FORCING CLEAN RE-CREATION TO FIX TYPE MISMATCH)
+DROP TABLE IF EXISTS payments, invoices, lab_orders, lab_tests, beds, wards, inventory, prescriptions, consultations, appointments, patients, profiles, roles, clinics CASCADE;
 
 -- 1. Enable UUID Extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
