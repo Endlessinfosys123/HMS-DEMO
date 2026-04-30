@@ -17,34 +17,51 @@ import {
     MessageSquare,
     Sparkles,
     X,
-    Stethoscope
+    Stethoscope,
+    ShieldCheck,
+    Globe,
+    Zap
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
 const Sidebar = () => {
+    const { profile } = useAuth();
+    const isSuperAdmin = profile?.roles?.name === 'SUPER_ADMIN';
+
     return (
         <aside className="sidebar">
             <div style={{ padding: '0 24px', marginBottom: '32px' }}>
                 <h2 style={{ fontSize: '1.2rem', color: 'var(--accent-primary)' }}>HealthCore HMS</h2>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Supabase Edition</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {isSuperAdmin ? 'SaaS Global Admin' : 'Clinic Workspace'}
+                </p>
             </div>
 
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <SidebarLink to="/dashboard" icon={<LayoutDashboard size={20} />} label="Dashboard" />
-                <SidebarLink to="/patients" icon={<Users size={20} />} label="Patients" />
-                <SidebarLink to="/doctors" icon={<Stethoscope size={20} />} label="Doctors" />
-                <SidebarLink to="/appointments" icon={<Calendar size={20} />} label="Schedule" />
-                <SidebarLink to="/inpatients" icon={<Users size={20} />} label="Admissions" />
-                <SidebarLink to="/beds" icon={<FileText size={20} />} label="Wards" />
-                <SidebarLink to="/lab" icon={<TestTube size={20} />} label="Laboratory" />
-                <SidebarLink to="/pharmacy" icon={<Pill size={20} />} label="Pharmacy" />
-                <SidebarLink to="/billing" icon={<CreditCard size={20} />} label="Billing" />
-                <SidebarLink to="/staff" icon={<Shield size={20} />} label="Staff / HR" />
-                <SidebarLink to="/reports" icon={<BarChart3 size={20} />} label="Reports" />
-
-                <div style={{ height: '32px' }} />
-                <SidebarLink to="/settings" icon={<Settings size={20} />} label="Settings" />
+                {isSuperAdmin ? (
+                    <>
+                        <SidebarLink to="/super-admin" icon={<Globe size={20} />} label="Global Overview" />
+                        <SidebarLink to="/reports" icon={<BarChart3 size={20} />} label="SaaS Analytics" />
+                        <SidebarLink to="/settings" icon={<Settings size={20} />} label="System Config" />
+                    </>
+                ) : (
+                    <>
+                        <SidebarLink to="/dashboard" icon={<LayoutDashboard size={20} />} label="Dashboard" />
+                        <SidebarLink to="/patients" icon={<Users size={20} />} label="Patients" />
+                        <SidebarLink to="/doctors" icon={<Stethoscope size={20} />} label="Doctors" />
+                        <SidebarLink to="/appointments" icon={<Calendar size={20} />} label="Schedule" />
+                        <SidebarLink to="/inpatients" icon={<Users size={20} />} label="Admissions" />
+                        <SidebarLink to="/beds" icon={<FileText size={20} />} label="Wards" />
+                        <SidebarLink to="/lab" icon={<TestTube size={20} />} label="Laboratory" />
+                        <SidebarLink to="/pharmacy" icon={<Pill size={20} />} label="Pharmacy" />
+                        <SidebarLink to="/billing" icon={<CreditCard size={20} />} label="Billing" />
+                        <SidebarLink to="/staff" icon={<Shield size={20} />} label="Staff / HR" />
+                        <SidebarLink to="/reports" icon={<BarChart3 size={20} />} label="Reports" />
+                        <div style={{ height: '32px' }} />
+                        <SidebarLink to="/settings" icon={<Settings size={20} />} label="Settings" />
+                    </>
+                )}
             </nav>
         </aside>
     );
@@ -164,7 +181,9 @@ const Header = () => {
 
                 <div style={{ textAlign: 'right' }}>
                     <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>{profile?.first_name || 'Admin User'}</p>
-                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{profile?.roles?.name || 'Administrator'}</p>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 'bold' }}>
+                        {profile?.roles?.name === 'SUPER_ADMIN' ? 'SUPER ADMIN' : profile?.clinics?.name || 'Clinic Admin'}
+                    </p>
                 </div>
                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(45deg, var(--accent-primary), var(--accent-secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
                     {profile?.first_name?.[0] || 'A'}
@@ -225,18 +244,26 @@ export const Layout = () => {
                         </div>
                         <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div className="bot-msg" style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px 12px 12px 0', fontSize: '0.85rem' }}>
-                                Hello! I'm KiviBot, your HMS assistant. How can I help you navigate the system today?
+                                Hello! I'm KiviBot AI 2.0. I can help you manage your clinic more efficiently.
                             </div>
-                            <div className="bot-msg" style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px 12px 12px 0', fontSize: '0.85rem' }}>
-                                You can ask me to "Find Dr. Smith" or "Show today's revenue report".
+                            <div className="bot-msg" style={{ alignSelf: 'flex-start', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '12px', borderRadius: '12px 12px 12px 0', fontSize: '0.85rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+                                    <Sparkles size={14} /> AI Suggestion
+                                </div>
+                                Based on your recent inventory data, you should restock **Paracetamol 500mg** soon. It will likely run out in 3 days.
                             </div>
                         </div>
                         <div style={{ padding: '16px', borderTop: '1px solid var(--border-light)' }}>
-                            <input 
-                                type="text" 
-                                placeholder="Type your query..." 
-                                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-light)', borderRadius: '8px', padding: '10px', color: '#fff' }}
-                            />
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <input 
+                                    type="text" 
+                                    placeholder="Ask anything..." 
+                                    style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-light)', borderRadius: '8px', padding: '10px', color: '#fff' }}
+                                />
+                                <button className="btn btn-primary" style={{ padding: '8px 12px' }}>
+                                    <Zap size={16} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

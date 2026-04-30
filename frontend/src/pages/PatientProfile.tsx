@@ -10,8 +10,10 @@ import {
     Activity, 
     Clock,
     Plus,
-    Stethoscope
+    Stethoscope,
+    Sparkles
 } from 'lucide-react';
+import { ConsultationModal } from '../components/ConsultationModal';
 
 export const PatientProfile = () => {
     const { id } = useParams();
@@ -23,6 +25,7 @@ export const PatientProfile = () => {
     const [invoices, setInvoices] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState('clinical');
     const [loading, setLoading] = useState(true);
+    const [isConsultModalOpen, setIsConsultModalOpen] = useState(false);
 
     useEffect(() => {
         if (id) fetchPatientData();
@@ -139,7 +142,13 @@ export const PatientProfile = () => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <h4 style={{ margin: 0 }}>Consultation Timeline</h4>
-                                    <button className="btn btn-primary" style={{ fontSize: '0.8rem', padding: '6px 12px' }}><Plus size={14} /> New Record</button>
+                                    <button 
+                                        className="btn btn-primary" 
+                                        style={{ fontSize: '0.8rem', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                        onClick={() => setIsConsultModalOpen(true)}
+                                    >
+                                        <Sparkles size={14} /> Smart Consultation
+                                    </button>
                                 </div>
                                 {consultations.length > 0 ? consultations.map((c) => (
                                     <div key={c.id} style={{ padding: '16px', border: '1px solid var(--border-light)', borderRadius: '12px', background: 'rgba(255,255,255,0.02)' }}>
@@ -235,6 +244,13 @@ export const PatientProfile = () => {
                     </div>
                 </div>
             </div>
+
+            <ConsultationModal 
+                isOpen={isConsultModalOpen}
+                onClose={() => setIsConsultModalOpen(false)}
+                patientId={id || ''}
+                onSuccess={fetchPatientData}
+            />
         </div>
     );
 };

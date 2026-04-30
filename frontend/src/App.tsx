@@ -17,19 +17,24 @@ import { Doctors } from './pages/Doctors';
 import { DoctorProfile } from './pages/DoctorProfile';
 import { Settings } from './pages/Settings';
 
+import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
+import { Onboarding } from './pages/Onboarding';
+
 function App() {
-  const { user, isLoading } = useAuth();
+  const { user, profile, isLoading } = useAuth();
 
   if (isLoading) return <div style={{ color: 'white', padding: '20px' }}>Initializing HMS...</div>;
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+        <Route path="/login" element={!user ? <Login /> : (profile?.roles?.name === 'SUPER_ADMIN' ? <Navigate to="/super-admin" /> : <Navigate to="/" />)} />
+        <Route path="/onboarding" element={<Onboarding />} />
 
         <Route path="/" element={user ? <Layout /> : <Navigate to="/login" />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route index element={profile?.roles?.name === 'SUPER_ADMIN' ? <Navigate to="/super-admin" replace /> : <Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="super-admin" element={<SuperAdminDashboard />} />
           <Route path="patients" element={<Patients />} />
           <Route path="patients/:id" element={<PatientProfile />} />
           <Route path="doctors" element={<Doctors />} />
@@ -43,7 +48,6 @@ function App() {
           <Route path="staff" element={<Staff />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
-          {/* Add more routes here in Phase 3 */}
         </Route>
       </Routes>
     </Router>

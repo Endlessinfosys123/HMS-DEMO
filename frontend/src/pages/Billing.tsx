@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Download, FileText, Search, Plus, Trash2, CheckCircle } from 'lucide-react';
+import { Download, FileText, Search, Plus, Trash2, CheckCircle, MessageSquare } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { whatsappService } from '../services/whatsappService';
 
 export const Billing = () => {
     const [invoices, setInvoices] = useState<any[]>([]);
@@ -34,8 +35,8 @@ export const Billing = () => {
     const fetchInitialData = async () => {
         setLoading(true);
         const [invRes, patientRes] = await Promise.all([
-            supabase.from('invoices').select('*, patients(first_name, last_name)').order('created_at', { ascending: false }),
-            supabase.from('patients').select('id, first_name, last_name')
+            supabase.from('invoices').select('*, patients(first_name, last_name, phone)').order('created_at', { ascending: false }),
+            supabase.from('patients').select('id, first_name, last_name, phone')
         ]);
 
         if (!invRes.error) setInvoices(invRes.data || []);
@@ -362,6 +363,19 @@ export const Billing = () => {
                                                     <CheckCircle size={14} />
                                                 </button>
                                             )}
+                                            <button 
+                                                className="btn btn-outline" 
+                                                style={{ padding: '6px', color: '#25D366', borderColor: 'rgba(37, 211, 102, 0.3)' }}
+                                                onClick={() => whatsappService.sendInvoice(
+                                                    inv.patients?.first_name,
+                                                    Number(inv.amount).toFixed(2),
+                                                    inv.id.slice(0, 6).toUpperCase(),
+                                                    inv.patients?.phone || ''
+                                                )}
+                                                title="Send via WhatsApp"
+                                            >
+                                                <MessageSquare size={14} />
+                                            </button>
                                             <button className="btn btn-outline" style={{ padding: '6px' }}><Download size={14} /></button>
                                         </div>
                                     </td>

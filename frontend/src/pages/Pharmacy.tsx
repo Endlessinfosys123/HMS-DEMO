@@ -127,6 +127,52 @@ export const Pharmacy = () => {
                 </div>
             </div>
 
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '2rem' }}>
+                <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1))', borderLeft: '4px solid var(--status-success)' }}>
+                    <h4 className="flex items-center gap-2 mb-2"><Pill size={18} className="text-accent" /> Stock Overview</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Inventory is currently 84% optimized. 4 items require attention.</p>
+                </div>
+                <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1))', borderLeft: '4px solid var(--status-danger)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <h4 className="flex items-center gap-2" style={{ margin: 0 }}><AlertTriangle size={18} className="text-danger" /> Smart Reorder</h4>
+                        <span className="text-xs font-bold text-danger bg-danger/10 px-2 py-0.5 rounded">Urgent</span>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Paracetamol 500mg predicted to run out in <strong>3 days</strong> based on consumption.</p>
+                    <button className="btn btn-primary" style={{ width: '100%', fontSize: '0.75rem', padding: '8px' }}>Quick Reorder from Supplier</button>
+                </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '2rem' }}>
+                <div className="glass-card">
+                    <h4 className="mb-4 flex items-center gap-2"><ShoppingCart size={18} className="text-accent" /> Incoming Digital Prescriptions</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.9rem' }}>Patient: John Doe</p>
+                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>From: Dr. Smith (General Practice)</p>
+                                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--accent-primary)' }}>1x Amoxicillin 500mg, 1x Cetirizine</p>
+                            </div>
+                            <button className="btn btn-primary" style={{ fontSize: '0.7rem', padding: '6px 12px' }}>Dispense Now</button>
+                        </div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>Waiting for more incoming orders...</p>
+                    </div>
+                </div>
+
+                <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.03)' }}>
+                    <h4 className="mb-4">Quick Stats</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                            <span className="text-muted">Orders Today</span>
+                            <span className="font-bold">24</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                            <span className="text-muted">Pending Dispense</span>
+                            <span className="font-bold text-accent">1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <Modal 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)} 

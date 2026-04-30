@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Calendar as CalendarIcon, Clock, User, Plus, Check, XCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Plus, Check, XCircle, MessageSquare } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { whatsappService } from '../services/whatsappService';
 
 export const Appointments = () => {
     const [appointments, setAppointments] = useState<any[]>([]);
@@ -28,7 +29,7 @@ export const Appointments = () => {
     const fetchInitialData = async () => {
         setLoading(true);
         const [apptsRes, patientsRes, doctorsRes] = await Promise.all([
-            supabase.from('appointments').select('*, patients(first_name, last_name), profiles:doctor_id(first_name, last_name)').order('appointment_date', { ascending: true }),
+            supabase.from('appointments').select('*, patients(first_name, last_name, phone), profiles:doctor_id(first_name, last_name)').order('appointment_date', { ascending: true }),
             supabase.from('patients').select('id, first_name, last_name'),
             supabase.from('profiles').select('id, first_name, last_name').not('first_name', 'eq', '')
         ]);
@@ -289,6 +290,18 @@ export const Appointments = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                                 <Clock size={14} /> {new Date(apt.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
+                            <button 
+                                onClick={() => whatsappService.sendAppointmentConfirmation(
+                                    apt.patients?.first_name,
+                                    apt.profiles?.first_name + ' ' + apt.profiles?.last_name,
+                                    new Date(apt.appointment_date).toLocaleDateString(),
+                                    new Date(apt.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                    apt.patients?.phone || ''
+                                )}
+                                style={{ marginLeft: 'auto', background: 'rgba(37, 211, 102, 0.1)', color: '#25D366', border: 'none', borderRadius: '6px', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
+                            >
+                                <MessageSquare size={14} /> WhatsApp
+                            </button>
                         </div>
 
                         {apt.status === 'SCHEDULED' && (

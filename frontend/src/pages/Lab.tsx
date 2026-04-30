@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Plus, Search, CheckCircle, Clock, Beaker, FileText } from 'lucide-react';
+import { Plus, Search, CheckCircle, Clock, Beaker, FileText, MessageSquare, FlaskConical } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { whatsappService } from '../services/whatsappService';
 
 export const Lab = () => {
     const [orders, setOrders] = useState<any[]>([]);
@@ -33,8 +34,8 @@ export const Lab = () => {
     const fetchInitialData = async () => {
         setLoading(true);
         const [ordersRes, patientsRes, testsRes] = await Promise.all([
-            supabase.from('lab_orders').select('*, patients(first_name, last_name), lab_tests(name)').order('created_at', { ascending: false }),
-            supabase.from('patients').select('id, first_name, last_name'),
+            supabase.from('lab_orders').select('*, patients(first_name, last_name, phone), lab_tests(name)').order('created_at', { ascending: false }),
+            supabase.from('patients').select('id, first_name, last_name, phone'),
             supabase.from('lab_tests').select('id, name')
         ]);
 
@@ -99,6 +100,26 @@ export const Lab = () => {
                 >
                     <Plus size={18} /> New Lab Order
                 </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '2rem' }}>
+                <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.05)', borderLeft: '4px solid var(--accent-primary)' }}>
+                    <h4 className="flex items-center gap-2 mb-3"><FlaskConical size={18} className="text-accent" /> Incoming Digital Requests</h4>
+                    <div style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.9rem' }}>Patient: Jane Doe</p>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Test: CBC, Lipid Profile</p>
+                        </div>
+                        <span className="text-xs font-bold text-accent px-2 py-1 rounded bg-accent/10">In Queue</span>
+                    </div>
+                </div>
+                <div className="glass-card">
+                    <h4 className="mb-3">Lab Efficiency</h4>
+                    <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
+                        <div style={{ width: '92%', height: '100%', background: 'var(--status-success)' }}></div>
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Average turnaround time: <strong>4.2 hours</strong></p>
+                </div>
             </div>
 
             {/* New Order Modal */}
@@ -283,16 +304,30 @@ export const Lab = () => {
                                             >
                                                 <Beaker size={14} /> Record Result
                                             </button>
-                                        ) : (
-                                            <button 
-                                                className="btn btn-outline" 
-                                                style={{ fontSize: '0.8rem', padding: '6px 12px' }}
-                                                onClick={() => {
-                                                    alert('Result: ' + order.result);
-                                                }}
-                                            >
-                                                <FileText size={14} /> View
-                                            </button>
+                                         ) : (
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <button 
+                                                    className="btn btn-outline" 
+                                                    style={{ fontSize: '0.8rem', padding: '6px 12px', color: '#25D366', borderColor: 'rgba(37, 211, 102, 0.3)' }}
+                                                    onClick={() => whatsappService.sendLabAlert(
+                                                        order.patients?.first_name,
+                                                        order.lab_tests?.name,
+                                                        order.patients?.phone || ''
+                                                    )}
+                                                    title="Notify via WhatsApp"
+                                                >
+                                                    <MessageSquare size={14} />
+                                                </button>
+                                                <button 
+                                                    className="btn btn-outline" 
+                                                    style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+                                                    onClick={() => {
+                                                        alert('Result: ' + order.result);
+                                                    }}
+                                                >
+                                                    <FileText size={14} /> View
+                                                </button>
+                                            </div>
                                         )}
                                     </td>
                                 </tr>
