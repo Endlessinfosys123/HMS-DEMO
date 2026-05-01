@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { clinicalTemplates, type Specialty } from '../data/templates';
 import { supabase } from '../lib/supabase';
@@ -16,6 +16,7 @@ export const ConsultationModal = ({ isOpen, onClose, patientId, onSuccess }: Pro
     const { profile } = useAuth();
     const [labTests, setLabTests] = useState<any[]>([]);
     const [inventory, setInventory] = useState<any[]>([]);
+    const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         diagnosis: '',
         notes: '',

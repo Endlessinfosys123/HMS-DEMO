@@ -408,18 +408,6 @@ const MetricCard = ({ label, value, subValue, icon, trend }: any) => (
     </div>
 );
 
-const HealthIndicator = ({ label, status, color, icon }: any) => (
-    <div className="flex items-center gap-3">
-        <div className={`p-1.5 rounded-lg bg-white/5 ${color}`}>
-            {icon}
-        </div>
-        <div>
-            <div className="text-[10px] font-bold text-white/30 uppercase tracking-tighter">{label}</div>
-            <div className={`text-xs font-black ${color}`}>{status}</div>
-        </div>
-    </div>
-);
-
 const FeedItem = ({ icon, color, label, time, detail }: any) => (
     <div className="flex gap-3 group">
         <div className={`mt-1 p-2 rounded-md bg-white/5 ${color} group-hover:bg-white/10 transition-colors`}>
