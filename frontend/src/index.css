@@ -269,3 +269,45 @@ h4 {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+.patient-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.patient-row:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  transform: translateX(4px);
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+.bg-accent-soft {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent-primary);
+}

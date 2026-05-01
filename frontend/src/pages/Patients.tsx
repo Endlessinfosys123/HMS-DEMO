@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, ExternalLink, ClipboardList, Stethoscope, ArrowRight, ArrowLeft, CheckCircle, User, Phone, ShieldCheck, Droplets, Calendar as CalendarIcon } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { ConsultationModal } from '../components/ConsultationModal';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Patients = () => {
@@ -26,12 +27,6 @@ export const Patients = () => {
         date_of_birth: '',
         blood_group: '',
         address: '',
-    });
-
-    const [consultData, setConsultData] = useState({
-        symptoms: '',
-        diagnosis: '',
-        notes: ''
     });
 
     useEffect(() => {
@@ -73,32 +68,6 @@ export const Patients = () => {
             fetchPatients();
         } else {
             alert('Error registering patient: ' + error.message);
-        }
-        setSubmitting(false);
-    };
-
-    const handleConsultation = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedPatient || !profile) return;
-        setSubmitting(true);
-        
-        const { error } = await supabase
-            .from('consultations')
-            .insert([{
-                patient_id: selectedPatient.id,
-                doctor_id: profile.id,
-                clinic_id: profile.clinic_id,
-                symptoms: consultData.symptoms,
-                diagnosis: consultData.diagnosis,
-                notes: consultData.notes
-            }]);
-
-        if (!error) {
-            setIsConsultModalOpen(false);
-            setConsultData({ symptoms: '', diagnosis: '', notes: '' });
-            alert('Consultation record saved successfully!');
-        } else {
-            alert('Error saving record: ' + error.message);
         }
         setSubmitting(false);
     };
@@ -368,67 +337,15 @@ export const Patients = () => {
             </Modal>
 
             {/* Consultation / EMR Modal */}
-            <Modal
+            <ConsultationModal 
                 isOpen={isConsultModalOpen}
                 onClose={() => setIsConsultModalOpen(false)}
-                title={`Clinical Consultation: ${selectedPatient?.first_name} ${selectedPatient?.last_name}`}
-                size="lg"
-            >
-                <form onSubmit={handleConsultation}>
-                    <div style={{ display: 'flex', gap: '20px', marginBottom: '1.5rem', padding: '12px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px' }}>
-                        <div style={{ flex: 1 }}>
-                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Patient ID</p>
-                            <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>#{selectedPatient?.id.slice(0,8).toUpperCase()}</p>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Attending Professional</p>
-                            <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>{profile?.first_name} {profile?.last_name} ({profile?.roles?.name})</p>
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label flex items-center gap-2"><ClipboardList size={16} className="text-accent" /> Subjective (Symptoms & History)</label>
-                        <textarea 
-                            className="form-input" 
-                            rows={3} 
-                            required
-                            value={consultData.symptoms}
-                            onChange={(e) => setConsultData({...consultData, symptoms: e.target.value})}
-                            placeholder="Patient reports headache, fever for 3 days..."
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label flex items-center gap-2"><Stethoscope size={16} className="text-accent" /> Objective / Assessment (Diagnosis)</label>
-                        <textarea 
-                            className="form-input" 
-                            rows={2} 
-                            required
-                            value={consultData.diagnosis}
-                            onChange={(e) => setConsultData({...consultData, diagnosis: e.target.value})}
-                            placeholder="Bacterial Infection / Viral Fever"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Plan (Treatment & Prescription)</label>
-                        <textarea 
-                            className="form-input" 
-                            rows={4} 
-                            value={consultData.notes}
-                            onChange={(e) => setConsultData({...consultData, notes: e.target.value})}
-                            placeholder="Prescribed Amoxicillin 500mg TID for 5 days. Bed rest recommended."
-                        />
-                    </div>
-
-                    <div className="flex-end" style={{ marginTop: '1.5rem' }}>
-                        <button type="button" className="btn btn-outline" onClick={() => setIsConsultModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn btn-primary" disabled={submitting}>
-                            {submitting ? 'Saving Record...' : 'Finalize Consultation'}
-                        </button>
-                    </div>
-                </form>
-            </Modal>
+                patientId={selectedPatient?.id || ''}
+                onSuccess={() => {
+                    alert('Consultation record saved successfully!');
+                    fetchPatients();
+                }}
+            />
 
             <div className="glass-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
