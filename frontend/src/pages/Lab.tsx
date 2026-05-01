@@ -3,8 +3,10 @@ import { supabase } from '../lib/supabase';
 import { Plus, Search, CheckCircle, Clock, Beaker, FileText, MessageSquare, FlaskConical } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { whatsappService } from '../services/whatsappService';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Lab = () => {
+    const { profile } = useAuth();
     const [orders, setOrders] = useState<any[]>([]);
     const [patients, setPatients] = useState<any[]>([]);
     const [tests, setTests] = useState<any[]>([]);
@@ -48,7 +50,7 @@ export const Lab = () => {
     const handleCreateOrder = async (e: React.FormEvent) => {
         e.preventDefault();
         setOrderSubmitting(true);
-        const { error } = await supabase.from('lab_orders').insert([orderForm]);
+        const { error } = await supabase.from('lab_orders').insert([{ ...orderForm, clinic_id: profile?.clinic_id }]);
         if (!error) {
             setIsOrderModalOpen(false);
             setOrderForm({ patient_id: '', test_id: '' });

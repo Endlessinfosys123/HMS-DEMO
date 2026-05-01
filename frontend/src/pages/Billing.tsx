@@ -3,8 +3,10 @@ import { supabase } from '../lib/supabase';
 import { Download, FileText, Search, Plus, Trash2, CheckCircle, MessageSquare } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { whatsappService } from '../services/whatsappService';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Billing = () => {
+    const { profile } = useAuth();
     const [invoices, setInvoices] = useState<any[]>([]);
     const [patients, setPatients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -64,6 +66,7 @@ export const Billing = () => {
             .from('invoices')
             .insert([{
                 ...invoiceData,
+                clinic_id: profile?.clinic_id,
                 amount: totalAmount
             }]);
 

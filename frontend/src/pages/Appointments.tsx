@@ -3,8 +3,10 @@ import { supabase } from '../lib/supabase';
 import { Calendar as CalendarIcon, Clock, User, Plus, Check, XCircle, MessageSquare } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { whatsappService } from '../services/whatsappService';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Appointments = () => {
+    const { profile } = useAuth();
     const [appointments, setAppointments] = useState<any[]>([]);
     const [patients, setPatients] = useState<any[]>([]);
     const [doctors, setDoctors] = useState<any[]>([]);
@@ -46,7 +48,7 @@ export const Appointments = () => {
         
         const { error } = await supabase
             .from('appointments')
-            .insert([formData]);
+            .insert([{ ...formData, clinic_id: profile?.clinic_id }]);
 
         if (!error) {
             setIsModalOpen(false);

@@ -3,8 +3,10 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, Search, Mail, Phone, Edit2, Trash2, ArrowRight, ArrowLeft, CheckCircle, IdCard } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Staff = () => {
+    const { profile } = useAuth();
     const navigate = useNavigate();
     const [staff, setStaff] = useState<any[]>([]);
     const [roles, setRoles] = useState<any[]>([]);
@@ -60,6 +62,7 @@ export const Staff = () => {
             .from('profiles')
             .insert([{
                 ...formData,
+                clinic_id: profile?.clinic_id,
                 employee_id: generatedId,
                 created_at: new Date().toISOString()
             }]);

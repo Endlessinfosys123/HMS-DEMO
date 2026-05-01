@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { clinicalTemplates, type Specialty } from '../data/templates';
 import { supabase } from '../lib/supabase';
 import { FlaskConical, Pill, Save } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Props {
     isOpen: boolean;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export const ConsultationModal = ({ isOpen, onClose, patientId, onSuccess }: Props) => {
+    const { profile } = useAuth();
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         diagnosis: '',
@@ -39,6 +41,7 @@ export const ConsultationModal = ({ isOpen, onClose, patientId, onSuccess }: Pro
                 .from('consultations')
                 .insert([{
                     patient_id: patientId,
+                    clinic_id: profile?.clinic_id,
                     diagnosis: formData.diagnosis,
                     notes: formData.notes
                 }]);

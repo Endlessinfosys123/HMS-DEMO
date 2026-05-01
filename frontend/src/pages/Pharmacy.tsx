@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Pill, Plus, Search, AlertTriangle, ShoppingCart, Trash2 } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Pharmacy = () => {
+    const { profile } = useAuth();
     const [inventory, setInventory] = useState<any[]>([]);
     const [patients, setPatients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export const Pharmacy = () => {
         
         const { error } = await supabase
             .from('inventory')
-            .insert([formData]);
+            .insert([{ ...formData, clinic_id: profile?.clinic_id }]);
 
         if (!error) {
             setIsModalOpen(false);
@@ -85,6 +87,7 @@ export const Pharmacy = () => {
                 .from('invoices')
                 .insert([{
                     patient_id: selectedPatientId,
+                    clinic_id: profile?.clinic_id,
                     amount: posItem.price * sellQuantity,
                     status: 'PAID',
                     due_date: new Date().toISOString().split('T')[0]

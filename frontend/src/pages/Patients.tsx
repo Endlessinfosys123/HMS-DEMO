@@ -55,7 +55,7 @@ export const Patients = () => {
         
         const { error } = await supabase
             .from('patients')
-            .insert([formData]);
+            .insert([{ ...formData, clinic_id: profile?.clinic_id }]);
 
         if (!error) {
             setIsModalOpen(false);
@@ -87,6 +87,7 @@ export const Patients = () => {
             .insert([{
                 patient_id: selectedPatient.id,
                 doctor_id: profile.id,
+                clinic_id: profile.clinic_id,
                 symptoms: consultData.symptoms,
                 diagnosis: consultData.diagnosis,
                 notes: consultData.notes

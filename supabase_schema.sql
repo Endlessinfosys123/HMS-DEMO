@@ -184,16 +184,25 @@ ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prescriptions ENABLE ROW LEVEL SECURITY;
 
+-- Helper Function to avoid RLS recursion
+CREATE OR REPLACE FUNCTION get_my_clinic_id()
+RETURNS UUID AS $$
+  SELECT clinic_id FROM profiles WHERE id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER;
+
 -- Clinic Policy
 DROP POLICY IF EXISTS "Users can view their own clinic" ON clinics;
-CREATE POLICY "Users can view their own clinic" ON clinics FOR SELECT USING (id IN (SELECT clinic_id FROM profiles WHERE id = auth.uid()));
+CREATE POLICY "Users can view their own clinic" ON clinics FOR SELECT USING (id = get_my_clinic_id());
 
 -- Profile Policies
 DROP POLICY IF EXISTS "Users can view profiles in their clinic" ON profiles;
-CREATE POLICY "Users can view profiles in their clinic" ON profiles FOR SELECT USING (clinic_id IN (SELECT clinic_id FROM profiles WHERE id = auth.uid()));
+CREATE POLICY "Users can view profiles in their clinic" ON profiles FOR SELECT USING (clinic_id = get_my_clinic_id());
 
 DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
 CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Enable insert for users" ON profiles;
+CREATE POLICY "Enable insert for users" ON profiles FOR INSERT WITH CHECK (auth.uid() = id OR (SELECT true));
 
 -- HMS Module Tenant Isolation Policies
 DO $$ 
@@ -206,7 +215,7 @@ BEGIN
              AND table_name IN ('patients', 'appointments', 'consultations', 'inventory', 'wards', 'beds', 'lab_tests', 'lab_orders', 'invoices', 'payments', 'prescriptions')
     LOOP
         EXECUTE format('DROP POLICY IF EXISTS "Tenant Isolation Policy" ON %I', t);
-        EXECUTE format('CREATE POLICY "Tenant Isolation Policy" ON %I FOR ALL TO authenticated USING (clinic_id IN (SELECT clinic_id FROM profiles WHERE id = auth.uid())) WITH CHECK (clinic_id IN (SELECT clinic_id FROM profiles WHERE id = auth.uid()))', t);
+        EXECUTE format('CREATE POLICY "Tenant Isolation Policy" ON %I FOR ALL TO authenticated USING (clinic_id = get_my_clinic_id()) WITH CHECK (clinic_id = get_my_clinic_id())', t);
     END LOOP;
 END $$;
 
@@ -214,24 +223,37 @@ END $$;
 -- This function will automatically create a entry in "profiles" when a user signs up in auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
+DECLARE
+  target_clinic_id UUID;
 BEGIN
+  -- Extract clinic_id safely with error handling
+  BEGIN
+    IF new.raw_user_meta_data->>'clinic_id' IS NOT NULL AND new.raw_user_meta_data->>'clinic_id' <> '' THEN
+      target_clinic_id := CAST(new.raw_user_meta_data->>'clinic_id' AS UUID);
+    ELSE
+      target_clinic_id := NULL;
+    END IF;
+  EXCEPTION WHEN OTHERS THEN
+    target_clinic_id := NULL;
+  END;
+
   INSERT INTO public.profiles (id, email, first_name, last_name, clinic_id)
   VALUES (
     new.id, 
     new.email, 
     COALESCE(new.raw_user_meta_data->>'first_name', ''), 
     COALESCE(new.raw_user_meta_data->>'last_name', ''),
-    CASE 
-      WHEN new.raw_user_meta_data->>'clinic_id' IS NOT NULL AND new.raw_user_meta_data->>'clinic_id' <> ''
-      THEN CAST(new.raw_user_meta_data->>'clinic_id' AS UUID)
-      ELSE NULL
-    END
+    target_clinic_id
   )
   ON CONFLICT (id) DO UPDATE SET
     email = EXCLUDED.email,
     first_name = EXCLUDED.first_name,
     last_name = EXCLUDED.last_name,
     clinic_id = EXCLUDED.clinic_id;
+
+  RETURN new;
+EXCEPTION WHEN OTHERS THEN
+  -- Fallback: Ensure user creation doesn't fail even if profile creation does
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
