@@ -40,8 +40,16 @@ const Sidebar = () => {
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {isSuperAdmin ? (
                     <>
-                        <SidebarLink to="/super-admin" icon={<Globe size={20} />} label="Global Overview" />
-                        <SidebarLink to="/reports" icon={<BarChart3 size={20} />} label="SaaS Analytics" />
+                        <div className="sidebar-category">Global Intelligence</div>
+                        <SidebarLink to="/super-admin" icon={<Globe size={20} />} label="Command Center" />
+                        <SidebarLink to="/reports" icon={<BarChart3 size={20} />} label="Platform Finance" />
+                        
+                        <div className="sidebar-category">Management</div>
+                        <SidebarLink to="/patients" icon={<Users size={20} />} label="Global Patients" />
+                        <SidebarLink to="/doctors" icon={<Stethoscope size={20} />} label="Global Doctors" />
+                        <SidebarLink to="/staff" icon={<Shield size={20} />} label="User Permissions" />
+                        
+                        <div className="sidebar-category">Infrastructure</div>
                         <SidebarLink to="/settings" icon={<Settings size={20} />} label="System Config" />
                     </>
                 ) : (

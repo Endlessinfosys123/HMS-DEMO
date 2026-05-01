@@ -311,3 +311,17 @@ h4 {
   background: rgba(59, 130, 246, 0.1);
   color: var(--accent-primary);
 }
+
+.bg-grid {
+  background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.sidebar-category {
+  padding: 12px 24px 8px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}

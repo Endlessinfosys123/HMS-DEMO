@@ -20,10 +20,12 @@ export const Staff = () => {
         email: '',
         phone: '',
         role_id: '',
+        clinic_id: profile?.clinic_id || '',
         specialization: ''
     });
 
     const [registrationStep, setRegistrationStep] = useState(1);
+    const [clinics, setClinics] = useState<any[]>([]);
     const [generatedId, setGeneratedId] = useState('');
 
     const generateStaffId = () => {
@@ -44,13 +46,15 @@ export const Staff = () => {
 
     const fetchInitialData = async () => {
         setLoading(true);
-        const [profilesRes, rolesRes] = await Promise.all([
-            supabase.from('profiles').select('*, roles(name)').order('first_name', { ascending: true }),
-            supabase.from('roles').select('*')
+        const [profilesRes, rolesRes, clinicsRes] = await Promise.all([
+            supabase.from('profiles').select('*, roles(name), clinics(name)').order('first_name', { ascending: true }),
+            supabase.from('roles').select('*'),
+            supabase.from('clinics').select('id, name')
         ]);
 
         if (!profilesRes.error) setStaff(profilesRes.data || []);
         if (!rolesRes.error) setRoles(rolesRes.data || []);
+        if (!clinicsRes.error) setClinics(clinicsRes.data || []);
         setLoading(false);
     };
 
@@ -206,6 +210,23 @@ export const Staff = () => {
                                         ))}
                                     </select>
                                 </div>
+                                {profile?.roles?.name === 'SUPER_ADMIN' && (
+                                    <div className="form-group">
+                                        <label className="form-label">Assign to Clinic</label>
+                                        <select 
+                                            className="form-input" 
+                                            required 
+                                            value={formData.clinic_id}
+                                            onChange={(e) => setFormData({...formData, clinic_id: e.target.value})}
+                                            style={{ background: 'var(--bg-sidebar)' }}
+                                        >
+                                            <option value="">Select Clinic</option>
+                                            {clinics.map(c => (
+                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                                 <div className="form-group">
                                     <label className="form-label">Professional Specialization</label>
                                     <input 
@@ -266,8 +287,8 @@ export const Staff = () => {
                                             <p style={{ fontWeight: '600' }}>{roles.find(r => r.id === formData.role_id)?.name || 'Unknown'}</p>
                                         </div>
                                         <div>
-                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Email</p>
-                                            <p style={{ fontWeight: '600', fontSize: '0.9rem' }}>{formData.email}</p>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Clinic Node</p>
+                                            <p style={{ fontWeight: '600', color: 'var(--accent-primary)' }}>{clinics.find(c => c.id === formData.clinic_id)?.name || 'Unassigned'}</p>
                                         </div>
                                         <div>
                                             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Specialization</p>
@@ -345,7 +366,7 @@ export const Staff = () => {
                                             <div>
                                                 <div style={{ fontWeight: '600' }}>{m.first_name} {m.last_name}</div>
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                                    {m.employee_id ? <span className="text-accent" style={{ fontWeight: '600' }}>{m.employee_id}</span> : m.specialization || 'General'}
+                                                    {m.clinics?.name && <span style={{ color: 'var(--accent-primary)', fontWeight: 'bold' }}>{m.clinics.name}</span>} • {m.employee_id ? <span className="text-accent" style={{ fontWeight: '600' }}>{m.employee_id}</span> : m.specialization || 'General'}
                                                 </div>
                                             </div>
                                         </div>
