@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   phone TEXT,
   role_id UUID REFERENCES roles(id),
   specialization TEXT, -- For Doctors
+  employee_id TEXT UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
