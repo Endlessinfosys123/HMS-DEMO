@@ -9,12 +9,9 @@ import {
     Search, 
     Plus, 
     Trash2, 
-    ShieldCheck, 
     Zap, 
-    Server, 
     Database, 
     Lock, 
-    Clock,
     ArrowUpRight,
     TrendingUp,
     AlertCircle,
@@ -322,8 +319,6 @@ export const SuperAdminDashboard = () => {
                                 </div>
                             )}
                         </div>
-                    </div>
-                </div>
                     </div>
                 </div>
 

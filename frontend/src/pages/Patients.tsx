@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, ExternalLink, ClipboardList, Stethoscope, ArrowRight, ArrowLeft, CheckCircle, User, Phone, ShieldCheck, Droplets, Calendar as CalendarIcon } from 'lucide-react';
+import { Search, Plus, ExternalLink, Stethoscope, ArrowRight, ArrowLeft, CheckCircle, User, Phone, ShieldCheck, Droplets, Calendar as CalendarIcon } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { ConsultationModal } from '../components/ConsultationModal';
 import { useAuth } from '../contexts/AuthContext';

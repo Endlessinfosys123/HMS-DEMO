@@ -81,6 +81,7 @@ export const Staff = () => {
                 email: '',
                 phone: '',
                 role_id: '',
+                clinic_id: profile?.clinic_id || '',
                 specialization: ''
             });
             fetchInitialData();
