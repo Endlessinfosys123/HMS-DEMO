@@ -28,13 +28,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={!user ? <Login /> : (profile?.roles?.name === 'SUPER_ADMIN' ? <Navigate to="/super-admin" /> : <Navigate to="/" />)} />
+        <Route path="/login" element={!user ? <Login /> : (profile?.roles?.name === 'SUPER_ADMIN' ? <Navigate to="/super-admin" replace /> : <Navigate to="/dashboard" replace />)} />
         <Route path="/onboarding" element={<Onboarding />} />
 
-        <Route path="/" element={user ? <Layout /> : <Navigate to="/login" />}>
+        <Route path="/" element={user ? <Layout /> : <Navigate to="/login" replace />}>
           <Route index element={profile?.roles?.name === 'SUPER_ADMIN' ? <Navigate to="/super-admin" replace /> : <Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="super-admin" element={<SuperAdminDashboard />} />
+          <Route path="dashboard" element={profile?.roles?.name === 'SUPER_ADMIN' ? <Navigate to="/super-admin" replace /> : <Dashboard />} />
+          <Route path="super-admin" element={profile?.roles?.name === 'SUPER_ADMIN' ? <SuperAdminDashboard /> : <Navigate to="/dashboard" replace />} />
           <Route path="patients" element={<Patients />} />
           <Route path="patients/:id" element={<PatientProfile />} />
           <Route path="doctors" element={<Doctors />} />

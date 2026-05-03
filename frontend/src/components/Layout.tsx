@@ -187,9 +187,11 @@ const Header = () => {
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>{profile?.first_name || 'Admin User'}</p>
+                    <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>
+                        {profile?.first_name ? `${profile.first_name} ${profile.last_name}` : 'HMS Administrator'}
+                    </p>
                     <p style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 'bold' }}>
-                        {profile?.roles?.name === 'SUPER_ADMIN' ? 'SUPER ADMIN' : profile?.clinics?.name || 'Clinic Admin'}
+                        {profile?.roles?.name === 'SUPER_ADMIN' ? 'GLOBAL NEXUS ADMIN' : profile?.clinics?.name || 'Medical Staff'}
                     </p>
                 </div>
                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(45deg, var(--accent-primary), var(--accent-secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>

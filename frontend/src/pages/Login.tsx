@@ -6,6 +6,8 @@ export const Login = () => {
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -16,9 +18,31 @@ export const Login = () => {
 
         try {
             if (isSignUp) {
-                const { error } = await supabase.auth.signUp({ email, password });
-                if (error) throw error;
-                alert('Check your email for confirmation!');
+                const { data: authData, error: authError } = await supabase.auth.signUp({ 
+                    email, 
+                    password,
+                    options: {
+                        data: {
+                            first_name: firstName,
+                            last_name: lastName
+                        }
+                    }
+                });
+                if (authError) throw authError;
+
+                // Manually create profile if trigger fails or for immediate consistency
+                if (authData.user) {
+                    await supabase.from('profiles').upsert({
+                        id: authData.user.id,
+                        email: email,
+                        first_name: firstName,
+                        last_name: lastName,
+                        updated_at: new Date().toISOString()
+                    });
+                }
+
+                alert('Account created! You can now sign in.');
+                setIsSignUp(false);
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
@@ -44,6 +68,33 @@ export const Login = () => {
                 {error && (
                     <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--status-danger)', borderRadius: '8px', color: 'var(--status-danger)', fontSize: '0.85rem', marginBottom: '1.5rem', display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <AlertCircle size={16} /> {error}
+                    </div>
+                )}
+
+                {isSignUp && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">First Name</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                placeholder="John"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Last Name</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Doe"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                required
+                            />
+                        </div>
                     </div>
                 )}
 

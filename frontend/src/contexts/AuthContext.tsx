@@ -20,20 +20,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         // Check active sessions and sets the user
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
-            if (session?.user) fetchProfile(session.user.id);
-            setIsLoading(false);
+            if (session?.user) {
+                await fetchProfile(session.user.id);
+            } else {
+                setIsLoading(false);
+            }
         });
 
         // Listen for changes on auth state (sign in, sign out, etc.)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
-            if (session?.user) fetchProfile(session.user.id);
-            else setProfile(null);
-            setIsLoading(false);
+            if (session?.user) {
+                await fetchProfile(session.user.id);
+            } else {
+                setProfile(null);
+                setIsLoading(false);
+            }
         });
 
         return () => subscription.unsubscribe();
@@ -42,11 +48,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchProfile = async (userId: string) => {
         const { data, error } = await supabase
             .from('profiles')
-            .select('*, roles(name), clinics(name)')
+            .select(`
+                *,
+                roles!profiles_role_id_fkey(name),
+                clinics!profiles_clinic_id_fkey(name)
+            `)
             .eq('id', userId)
             .single();
 
         if (!error) setProfile(data);
+        setIsLoading(false);
     };
 
     const signOut = async () => {
